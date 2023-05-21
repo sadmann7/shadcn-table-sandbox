@@ -56,5 +56,9 @@ export default async function IndexPage({ searchParams }: IndexPageProps) {
     }
   }
 
-  return <UnstyledTable data={skaters} pageCount={pageCount} />
+  return (
+    <main className="container py-6">
+      <UnstyledTable data={skaters} pageCount={pageCount} />
+    </main>
+  )
 }
