@@ -54,7 +54,13 @@ export function UnstyledTable({ data, pageCount }: UnstyledTableProps) {
         // Disable column filter for this column
         enableColumnFilter: false,
       },
-      { accessorKey: "age", header: "Age", enableColumnFilter: false },
+      {
+        accessorKey: "age",
+        header: "Age",
+        enableColumnFilter: false,
+        // Disable sorting for this column
+        enableSorting: false,
+      },
       { accessorKey: "email", header: "Email", enableColumnFilter: false },
       { accessorKey: "stats", header: "Stats", enableColumnFilter: false },
       {
@@ -193,16 +199,18 @@ export function UnstyledTable({ data, pageCount }: UnstyledTableProps) {
               <TableHead
                 // Handle server-side sorting
                 onClick={() => {
+                  const isSortable = header.column.getCanSort()
                   const nextSortDirection = header.column.getNextSortingOrder()
 
-                  // Update the URL with the new sort order
-                  router.push(
-                    `/?page=${page ? page : 1}${
-                      nextSortDirection === false
-                        ? ""
-                        : `&sort=${header.column.id}&order=${nextSortDirection}`
-                    }`
-                  )
+                  // Update the URL with the new sort order if the column is sortable
+                  isSortable &&
+                    router.push(
+                      `/?page=${page ? page : 1}${
+                        nextSortDirection === false
+                          ? ""
+                          : `&sort=${header.column.id}&order=${nextSortDirection}`
+                      }`
+                    )
                 }}
               >
                 {children}
@@ -215,10 +223,17 @@ export function UnstyledTable({ data, pageCount }: UnstyledTableProps) {
             paginationBar: () => {
               return (
                 <ReactPaginate
-                  className="flex items-center gap-2.5 p-4"
                   pageCount={pageCount}
                   pageRangeDisplayed={5}
                   marginPagesDisplayed={2}
+                  className="flex items-center gap-2.5 p-4"
+                  pageClassName={cn(
+                    buttonVariants({
+                      size: "sm",
+                      variant: "outline",
+                    }),
+                    "w-8 h-8 px-0"
+                  )}
                   previousClassName={buttonVariants({
                     variant: "outline",
                     size: "sm",
@@ -227,13 +242,6 @@ export function UnstyledTable({ data, pageCount }: UnstyledTableProps) {
                     variant: "outline",
                     size: "sm",
                   })}
-                  pageClassName={cn(
-                    buttonVariants({
-                      size: "sm",
-                      variant: "outline",
-                    }),
-                    "w-8 h-8 px-0"
-                  )}
                   disabledClassName="opacity-50 pointer-events-none"
                   onPageChange={({ selected }) => {
                     const selectedPage = selected + 1

@@ -35,34 +35,6 @@ export default async function IndexPage({ searchParams }: IndexPageProps) {
     },
   })
 
-  // await prisma.skater.deleteMany()
-
-  // Generate 100 skaters if there are none
-  if (!skaters.length) {
-    for (let i = 0; i < 100; i++) {
-      const name = faker.person.firstName()
-      const age = faker.number.int({ min: 10, max: 100 })
-      const email = faker.internet.email()
-      const stats = faker.number.int({ min: 10, max: 100 })
-      const stance =
-        faker.helpers.shuffle<Skater["stance"]>(["mongo", "goofy"])[0] ??
-        "goofy"
-      const deckPrice = faker.number.int({ min: 25, max: 100 })
-
-      // Save the skaters to the database
-      await prisma.skater.create({
-        data: {
-          name,
-          age,
-          email,
-          stats,
-          stance,
-          deckPrice,
-        },
-      })
-    }
-  }
-
   return (
     <main className="container py-6">
       <UnstyledTable data={skaters} pageCount={pageCount} />
