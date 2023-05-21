@@ -9,6 +9,7 @@ import ReactPaginate from "react-paginate"
 import {
   Table as ShadcnTable,
   type ColumnDef,
+  type ColumnSort,
   type VisibilityState,
 } from "unstyled-table"
 
@@ -29,6 +30,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import type { Order, Sort } from "@/app/page"
 
 import { Button, buttonVariants } from "./ui/button"
 import { Input } from "./ui/input"
@@ -117,8 +119,15 @@ export function UnstyledTable({ data, pageCount }: UnstyledTableProps) {
 
   // Handle server-side stuffs
   const page = searchParams.get("page")
-  const sort = searchParams.get("sort")
-  const order = searchParams.get("order")
+  const sort = searchParams.get("sort") as Sort
+  const order = searchParams.get("order") as Order
+
+  const [sorting] = React.useState<ColumnSort[]>([
+    {
+      id: sort ?? "name",
+      desc: order === "desc" ? true : false,
+    },
+  ])
 
   return (
     <div className="w-full">
@@ -136,29 +145,30 @@ export function UnstyledTable({ data, pageCount }: UnstyledTableProps) {
               <ChevronDown className="-mr-1 ml-2 h-5 w-5" aria-hidden="true" />
             </Button>
           </PopoverTrigger>
-          <PopoverContent align="end" className="w-auto min-w-[8rem]">
-            <div className="grid gap-4">
-              <div className="flex items-center space-x-2">
-                <input id="toggleAllColumns" type="checkbox" />
+          <PopoverContent align="end" className="w-auto min-w-[8rem] p-1">
+            <div className="flex items-center space-x-2 rounded-sm p-2 text-sm outline-none transition-colors hover:bg-accent focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50">
+              <input id="toggleAllColumns" type="checkbox" className="peer" />
+              <label
+                htmlFor="toggleAllColumns"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                Toggle All
+              </label>
+            </div>
+            {Array.from({ length: 6 }).map((column, i) => (
+              <div
+                key={i}
+                className="flex items-center space-x-2 rounded-sm p-2 text-sm outline-none transition-colors hover:bg-accent focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
+              >
+                <input type="checkbox" id={i.toString()} className="peer" />
                 <label
-                  htmlFor="toggleAllColumns"
+                  htmlFor={i.toString()}
                   className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                 >
-                  Toggle All
+                  {`Column ${i}`}
                 </label>
               </div>
-              {Array.from({ length: 6 }).map((column, i) => (
-                <div key={i} className="flex items-center space-x-2">
-                  <input type="checkbox" id={i.toString()} />
-                  <label
-                    htmlFor={i.toString()}
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                  >
-                    {`Column ${i}`}
-                  </label>
-                </div>
-              ))}
-            </div>
+            ))}
           </PopoverContent>
         </Popover>
       </div>
@@ -167,12 +177,13 @@ export function UnstyledTable({ data, pageCount }: UnstyledTableProps) {
           columns={columns}
           // The inline `[]` prevents re-rendering the table when the data changes.
           data={data ?? []}
-          state={{ globalFilter, columnVisibility }}
+          // States controlled by the table
+          state={{ globalFilter, columnVisibility, sorting }}
           // Handle global filtering
           setGlobalFilter={setGlobalFilter}
           // Handle column visibility
           setColumnVisibility={setColumnVisibility}
-          // This let you implement your own pagination
+          // Handle server-side sorting
           manualPagination
           renders={{
             table: ({ children }) => <Table>{children}</Table>,

@@ -21,15 +21,13 @@ export default function RootLayout({ children }: RootLayoutProps) {
         <head />
         <body
           className={cn(
-            "min-h-screen font-sans antialiased",
+            "font-sans antialiased",
             fontSans.variable,
             fontMono.variable
           )}
         >
-          <div className="relative flex min-h-screen flex-col">
-            <div className="flex-1">{children}</div>
-            <Toaster />
-          </div>
+          {children}
+          <Toaster />
         </body>
       </html>
     </>

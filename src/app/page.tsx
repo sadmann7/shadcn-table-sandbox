@@ -6,11 +6,15 @@ import { UnstyledTable } from "@/components/unstyled-table"
 
 faker.seed(69420)
 
+export type Sort = "name" | "age" | "email" | "stats" | "stance" | "deckPrice"
+export type Order = "asc" | "desc"
+export type Query = "name" | "email"
+
 interface IndexPageProps {
   searchParams: {
     page?: string
-    sort?: "name" | "age" | "email" | "stats" | "stance" | "deckPrice"
-    order?: "asc" | "desc"
+    sort?: Sort
+    order?: Order
   }
 }
 
@@ -31,18 +35,21 @@ export default async function IndexPage({ searchParams }: IndexPageProps) {
     },
   })
 
+  // await prisma.skater.deleteMany()
+
   // Generate 100 skaters if there are none
-  if (skaters.length === 0) {
+  if (!skaters.length) {
     for (let i = 0; i < 100; i++) {
-      const name = faker.name.firstName()
-      const age = faker.datatype.number({ min: 10, max: 60 })
+      const name = faker.person.firstName()
+      const age = faker.number.int({ min: 10, max: 100 })
       const email = faker.internet.email()
-      const stats = faker.datatype.number({ min: 10, max: 100 })
+      const stats = faker.number.int({ min: 10, max: 100 })
       const stance =
         faker.helpers.shuffle<Skater["stance"]>(["mongo", "goofy"])[0] ??
         "goofy"
-      const deckPrice = faker.datatype.number({ min: 25, max: 100 })
+      const deckPrice = faker.number.int({ min: 25, max: 100 })
 
+      // Save the skaters to the database
       await prisma.skater.create({
         data: {
           name,
