@@ -1,29 +1,29 @@
 "use client";
 
-import { formatPrice } from "@/lib/utils";
-import * as React from "react";
-import { Table, type ColumnDef } from "unstyled-table";
-import ReactPaginate from "react-paginate";
-import { type Skater } from "@prisma/client";
-import { useRouter } from "next/navigation";
 import {
-  Table as ShadcnTable,
-  TableHeader,
+  Table,
   TableBody,
-  TableFooter,
-  TableHead,
-  TableRow,
   TableCell,
-  TableCaption,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@/components/ui/table";
+import { cn, formatPrice } from "@/lib/utils";
+import { type Skater } from "@prisma/client";
+import { useRouter, useSearchParams } from "next/navigation";
+import * as React from "react";
+import ReactPaginate from "react-paginate";
+import { Table as ShadcnTable, type ColumnDef } from "unstyled-table";
+import { buttonVariants } from "./ui/button";
 
 interface UnstyledTableProps {
   data: Skater[];
   pageCount: number;
 }
 
-export function UnstyledTable({ data }: UnstyledTableProps) {
+export function UnstyledTable({ data, pageCount }: UnstyledTableProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   // Memoize the columns so they don't re-render on every render
   const columns = React.useMemo<ColumnDef<Skater, unknown>[]>(
@@ -45,45 +45,75 @@ export function UnstyledTable({ data }: UnstyledTableProps) {
     []
   );
 
+  // Handle server-side stuffs
+  const page = searchParams.get("page");
+  const sort = searchParams.get("sort");
+  const order = searchParams.get("order");
+
   return (
-    <Table
+    <ShadcnTable
       columns={columns}
       // The inline `[]` prevents re-rendering the table when the data changes.
       data={data ?? []}
-      showFooter
+      manualPagination
       renders={{
-        table: ({ children, ...props }) => (
-          <ShadcnTable {...props}>{children}</ShadcnTable>
+        table: ({ children }) => <Table>{children}</Table>,
+        header: ({ children }) => <TableHeader>{children}</TableHeader>,
+        headerRow: ({ children }) => <TableRow>{children}</TableRow>,
+        headerCell: ({ children, header }) => (
+          <TableHead
+            // Handle server-side sorting
+            onClick={() => {
+              const nextSortDirection = header.column.getNextSortingOrder();
+
+              // Update the URL with the new sort direction
+              router.push(
+                `/?page=${page ? page : 1}${
+                  nextSortDirection === false
+                    ? ""
+                    : `&sort=${header.column.id}&order=${nextSortDirection}`
+                }`
+              );
+            }}
+          >
+            {children}
+          </TableHead>
         ),
-        header: ({ children, ...props }) => (
-          <TableHeader {...props}>{children}</TableHeader>
-        ),
-        headerRow: ({ children, ...props }) => (
-          <TableRow {...props}>{children}</TableRow>
-        ),
-        headerCell: ({ children, ...props }) => (
-          <TableCell {...props}>{children}</TableCell>
-        ),
-        body: ({ children, ...props }) => (
-          <TableBody {...props}>{children}</TableBody>
-        ),
-        bodyRow: ({ children, ...props }) => (
-          <TableRow {...props}>{children}</TableRow>
-        ),
-        bodyCell: ({ children, ...props }) => (
-          <TableCell {...props}>{children}</TableCell>
-        ),
+        body: ({ children }) => <TableBody>{children}</TableBody>,
+        bodyRow: ({ children }) => <TableRow>{children}</TableRow>,
+        bodyCell: ({ children }) => <TableCell>{children}</TableCell>,
         // Custom pagination bar
         paginationBar: () => {
           return (
             <ReactPaginate
-              className="flex items-center gap-2.5"
-              pageCount={10}
+              className="flex items-center gap-2.5 p-4"
+              pageCount={pageCount}
               pageRangeDisplayed={5}
               marginPagesDisplayed={2}
+              previousClassName={buttonVariants({
+                variant: "outline",
+                size: "sm",
+              })}
+              nextClassName={buttonVariants({
+                variant: "outline",
+                size: "sm",
+              })}
+              pageClassName={cn(
+                buttonVariants({
+                  size: "sm",
+                  variant: "outline",
+                }),
+                "w-8 h-8 px-0"
+              )}
+              disabledClassName="opacity-50 pointer-events-none"
               onPageChange={({ selected }) => {
                 const selectedPage = selected + 1;
-                router.push(`/?page=${selectedPage}`);
+
+                router.push(
+                  `/?page=${selectedPage}${
+                    sort ? `&sort=${sort}${order ? `&order=${order}` : ""}` : ""
+                  }`
+                );
               }}
             />
           );
