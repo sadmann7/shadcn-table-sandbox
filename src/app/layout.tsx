@@ -1,16 +1,17 @@
-import "@/styles/globals.css";
+import "@/styles/globals.css"
+import type { Metadata } from "next"
 
-import { fontMono, fontSans } from "@/lib/fonts";
-import { cn } from "@/lib/utils";
-import type{ Metadata } from "next";
+import { fontMono, fontSans } from "@/lib/fonts"
+import { cn } from "@/lib/utils"
+import { Toaster } from "@/components/ui/toaster"
 
-export const metadata : Metadata = {
+export const metadata: Metadata = {
   title: "Shadcn Table - Unstyled Table",
-  description: "Shadcn table with unstyeld table package"
+  description: "Shadcn table with unstyeld table package.",
 }
 
 interface RootLayoutProps {
-  children: React.ReactNode;
+  children: React.ReactNode
 }
 
 export default function RootLayout({ children }: RootLayoutProps) {
@@ -27,9 +28,10 @@ export default function RootLayout({ children }: RootLayoutProps) {
         >
           <div className="relative flex min-h-screen flex-col">
             <div className="flex-1">{children}</div>
+            <Toaster />
           </div>
         </body>
       </html>
     </>
-  );
+  )
 }
