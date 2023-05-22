@@ -5,7 +5,6 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { type Skater } from "@prisma/client"
 import { ChevronDown, MoreHorizontal } from "lucide-react"
 import { toast } from "react-hot-toast"
-import ReactPaginate from "react-paginate"
 import {
   Table as ShadcnTable,
   type ColumnDef,
@@ -13,7 +12,7 @@ import {
   type VisibilityState,
 } from "unstyled-table"
 
-import { cn, formatPrice } from "@/lib/utils"
+import { formatPrice } from "@/lib/utils"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -32,16 +31,21 @@ import {
 } from "@/components/ui/table"
 import type { Order, Sort } from "@/app/page"
 
-import { Button, buttonVariants } from "./ui/button"
+import { Button } from "./ui/button"
 import { Input } from "./ui/input"
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover"
 
 interface UnstyledTableProps {
   data: Skater[]
   itemsCount: number
+  pageCount?: number
 }
 
-export function UnstyledTable({ data, itemsCount }: UnstyledTableProps) {
+export function UnstyledTable({
+  data,
+  itemsCount,
+  pageCount,
+}: UnstyledTableProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -178,88 +182,86 @@ export function UnstyledTable({ data, itemsCount }: UnstyledTableProps) {
           </PopoverContent>
         </Popover>
       </div>
-      <div className="rounded-md border">
-        <ShadcnTable
-          columns={columns}
-          // The inline `[]` prevents re-rendering the table when the data changes.
-          data={data ?? []}
-          // States controlled by the table
-          state={{ globalFilter, columnVisibility, sorting }}
-          // Handle global filtering
-          setGlobalFilter={setGlobalFilter}
-          // Handle column visibility
-          setColumnVisibility={setColumnVisibility}
-          // Handle server-side sorting
-          manualPagination
-          renders={{
-            table: ({ children }) => <Table>{children}</Table>,
-            header: ({ children }) => <TableHeader>{children}</TableHeader>,
-            headerRow: ({ children }) => <TableRow>{children}</TableRow>,
-            headerCell: ({ children, header }) => (
-              <TableHead
-                // Handle server-side sorting
-                onClick={() => {
-                  const isSortable = header.column.getCanSort()
-                  const nextSortDirection = header.column.getNextSortingOrder()
+      <ShadcnTable
+        columns={columns}
+        // The inline `[]` prevents re-rendering the table when the data changes.
+        data={data ?? []}
+        // States controlled by the table
+        state={{ globalFilter, columnVisibility, sorting }}
+        // Handle global filtering
+        setGlobalFilter={setGlobalFilter}
+        // Handle column visibility
+        setColumnVisibility={setColumnVisibility}
+        // Handle server-side sorting
+        manualPagination
+        itemsCount={itemsCount ?? 10}
+        renders={{
+          table: ({ children }) => <Table>{children}</Table>,
+          header: ({ children }) => <TableHeader>{children}</TableHeader>,
+          headerRow: ({ children }) => <TableRow>{children}</TableRow>,
+          headerCell: ({ children, header }) => (
+            <TableHead
+              // Handle server-side sorting
+              onClick={() => {
+                const isSortable = header.column.getCanSort()
+                const nextSortDirection = header.column.getNextSortingOrder()
 
-                  // Update the URL with the new sort order if the column is sortable
-                  isSortable &&
+                // Update the URL with the new sort order if the column is sortable
+                isSortable &&
+                  router.push(
+                    `/?page=${page ? page : 1}${
+                      nextSortDirection === false
+                        ? ""
+                        : `&sort=${header.column.id}&order=${nextSortDirection}`
+                    }`
+                  )
+              }}
+            >
+              {children}
+            </TableHead>
+          ),
+          body: ({ children }) => <TableBody>{children}</TableBody>,
+          bodyRow: ({ children }) => <TableRow>{children}</TableRow>,
+          bodyCell: ({ children }) => <TableCell>{children}</TableCell>,
+          // Custom pagination bar
+          paginationBar: () => {
+            return (
+              <div className="flex items-center justify-end space-x-2 py-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
                     router.push(
-                      `/?page=${page ? page : 1}${
-                        nextSortDirection === false
-                          ? ""
-                          : `&sort=${header.column.id}&order=${nextSortDirection}`
-                      }`
-                    )
-                }}
-              >
-                {children}
-              </TableHead>
-            ),
-            body: ({ children }) => <TableBody>{children}</TableBody>,
-            bodyRow: ({ children }) => <TableRow>{children}</TableRow>,
-            bodyCell: ({ children }) => <TableCell>{children}</TableCell>,
-            // Custom pagination bar
-            paginationBar: () => {
-              return (
-                <ReactPaginate
-                  pageCount={Number(itemsCount - 1) ?? 9}
-                  pageRangeDisplayed={5}
-                  marginPagesDisplayed={2}
-                  className="flex flex-wrap items-center gap-2.5 p-4"
-                  pageClassName={cn(
-                    buttonVariants({
-                      size: "sm",
-                      variant: "outline",
-                    }),
-                    "w-8 h-8 px-0"
-                  )}
-                  previousClassName={buttonVariants({
-                    variant: "outline",
-                    size: "sm",
-                  })}
-                  nextClassName={buttonVariants({
-                    variant: "outline",
-                    size: "sm",
-                  })}
-                  disabledClassName="opacity-50 pointer-events-none"
-                  onPageChange={({ selected }) => {
-                    const selectedPage = selected + 1
-                    // Update the URL with the new page number, sort, and order
-                    router.push(
-                      `/?page=${selectedPage}${
-                        sort
-                          ? `&sort=${sort}${order ? `&order=${order}` : ""}`
-                          : ""
+                      `/?page=${Number(page) - 1}${
+                        sort ? `&sort=${sort}&order=${order}` : ""
                       }`
                     )
                   }}
-                />
-              )
-            },
-          }}
-        />
-      </div>
+                  disabled={Number(page) === 1}
+                >
+                  Previous
+                  <span className="sr-only">Previous page</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    router.push(
+                      `/?page=${Number(page) + 1}${
+                        sort ? `&sort=${sort}&order=${order}` : ""
+                      }`
+                    )
+                  }}
+                  disabled={Number(page) === pageCount ?? 10}
+                >
+                  Next
+                  <span className="sr-only">Next page</span>
+                </Button>
+              </div>
+            )
+          },
+        }}
+      />
     </div>
   )
 }

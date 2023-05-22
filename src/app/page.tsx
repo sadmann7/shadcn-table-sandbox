@@ -20,11 +20,13 @@ export default async function IndexPage({ searchParams }: IndexPageProps) {
   // Number of skaters to show per page
   const itemsCount = 10
 
+  const pageCount = Math.ceil((await prisma.skater.count()) / itemsCount)
+
   // Get 10 skaters from the database
   const skaters = await prisma.skater.findMany({
     // For server-side pagination
     take: itemsCount,
-    skip: pageNumber * itemsCount,
+    skip: (pageNumber - 1) * itemsCount,
     // For server-side sorting
     orderBy: {
       [sort ?? "name"]: order ?? "asc",
@@ -33,7 +35,11 @@ export default async function IndexPage({ searchParams }: IndexPageProps) {
 
   return (
     <main className="container grid items-center py-6">
-      <UnstyledTable data={skaters} itemsCount={itemsCount} />
+      <UnstyledTable
+        data={skaters}
+        itemsCount={itemsCount}
+        pageCount={pageCount}
+      />
     </main>
   )
 }
