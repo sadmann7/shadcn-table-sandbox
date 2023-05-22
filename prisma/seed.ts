@@ -8,7 +8,7 @@ async function main() {
     await prisma.skater.create({
       data: {
         name: faker.person.firstName(),
-        age: faker.number.int({ min: 10, max: 100 }),
+        age: faker.number.int({ min: 10, max: 60 }),
         email: faker.internet.email(),
         stats: faker.number.int({ min: 10, max: 100 }),
         stance:

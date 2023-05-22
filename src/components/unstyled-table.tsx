@@ -65,7 +65,11 @@ export function UnstyledTable({
         // Disable sorting for this column
         enableSorting: false,
       },
-      { accessorKey: "email", header: "Email", enableColumnFilter: false },
+      {
+        accessorKey: "email",
+        header: "Email",
+        enableColumnFilter: false,
+      },
       { accessorKey: "stats", header: "Stats", enableColumnFilter: false },
       {
         accessorKey: "stance",
@@ -93,8 +97,11 @@ export function UnstyledTable({
           return (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="h-8 w-8 p-0">
-                  <span className="sr-only">Open menu</span>
+                <Button
+                  aria-label="Open menu"
+                  variant="ghost"
+                  className="h-8 w-8 p-0"
+                >
                   <MoreHorizontal className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
@@ -139,20 +146,22 @@ export function UnstyledTable({
     },
   ])
 
+  // Detect horizontally overflowing elements
+  // Remove this in production
   React.useEffect(() => {
     const docWidth = document.documentElement.offsetWidth
     ;[].forEach.call(
       document.querySelectorAll("*"),
-      function (el: HTMLElement) {
-        if (el.offsetWidth > docWidth) {
-          console.log(el)
+      function (element: HTMLElement) {
+        if (element.offsetWidth > docWidth) {
+          console.log(element)
         }
       }
     )
   }, [])
 
   return (
-    <>
+    <React.Fragment>
       <div className="flex items-center justify-between gap-5 py-4">
         <Input
           placeholder="Search..."
@@ -208,18 +217,12 @@ export function UnstyledTable({
         manualPagination
         itemsCount={itemsCount ?? 10}
         renders={{
-          table: ({ children, ...props }) => (
-            <Table {...props}>{children}</Table>
-          ),
-          header: ({ children, ...props }) => (
-            <TableHeader {...props}>{children}</TableHeader>
-          ),
-          headerRow: ({ children, ...props }) => (
-            <TableRow {...props}>{children}</TableRow>
-          ),
+          table: ({ children }) => <Table>{children}</Table>,
+          header: ({ children }) => <TableHeader>{children}</TableHeader>,
+          headerRow: ({ children }) => <TableRow>{children}</TableRow>,
           headerCell: ({ children, header }) => (
             <TableHead
-              colSpan={header.colSpan}
+              className="whitespace-nowrap"
               // Handle server-side sorting
               onClick={() => {
                 const isSortable = header.column.getCanSort()
@@ -240,14 +243,8 @@ export function UnstyledTable({
             </TableHead>
           ),
           body: ({ children }) => <TableBody>{children}</TableBody>,
-          bodyRow: ({ children, ...props }) => (
-            <TableRow {...props}>{children}</TableRow>
-          ),
-          bodyCell: ({ children, ...props }) => (
-            <TableCell {...props} colSpan={props.props.colSpan}>
-              {children}
-            </TableCell>
-          ),
+          bodyRow: ({ children }) => <TableRow>{children}</TableRow>,
+          bodyCell: ({ children }) => <TableCell>{children}</TableCell>,
           // Custom pagination bar
           paginationBar: () => {
             return (
@@ -287,6 +284,6 @@ export function UnstyledTable({
           },
         }}
       />
-    </>
+    </React.Fragment>
   )
 }
