@@ -139,8 +139,20 @@ export function UnstyledTable({
     },
   ])
 
+  React.useEffect(() => {
+    const docWidth = document.documentElement.offsetWidth
+    ;[].forEach.call(
+      document.querySelectorAll("*"),
+      function (el: HTMLElement) {
+        if (el.offsetWidth > docWidth) {
+          console.log(el)
+        }
+      }
+    )
+  }, [])
+
   return (
-    <div className="w-full">
+    <>
       <div className="flex items-center justify-between gap-5 py-4">
         <Input
           placeholder="Search..."
@@ -165,7 +177,7 @@ export function UnstyledTable({
                 Toggle All
               </label>
             </div>
-            {Array.from({ length: 6 }).map((column, i) => (
+            {Array.from({ length: 6 }).map((_, i) => (
               <div
                 key={i}
                 className="flex items-center space-x-2 rounded-sm p-2 text-sm outline-none transition-colors hover:bg-accent focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
@@ -196,11 +208,18 @@ export function UnstyledTable({
         manualPagination
         itemsCount={itemsCount ?? 10}
         renders={{
-          table: ({ children }) => <Table>{children}</Table>,
-          header: ({ children }) => <TableHeader>{children}</TableHeader>,
-          headerRow: ({ children }) => <TableRow>{children}</TableRow>,
+          table: ({ children, ...props }) => (
+            <Table {...props}>{children}</Table>
+          ),
+          header: ({ children, ...props }) => (
+            <TableHeader {...props}>{children}</TableHeader>
+          ),
+          headerRow: ({ children, ...props }) => (
+            <TableRow {...props}>{children}</TableRow>
+          ),
           headerCell: ({ children, header }) => (
             <TableHead
+              colSpan={header.colSpan}
               // Handle server-side sorting
               onClick={() => {
                 const isSortable = header.column.getCanSort()
@@ -221,8 +240,14 @@ export function UnstyledTable({
             </TableHead>
           ),
           body: ({ children }) => <TableBody>{children}</TableBody>,
-          bodyRow: ({ children }) => <TableRow>{children}</TableRow>,
-          bodyCell: ({ children }) => <TableCell>{children}</TableCell>,
+          bodyRow: ({ children, ...props }) => (
+            <TableRow {...props}>{children}</TableRow>
+          ),
+          bodyCell: ({ children, ...props }) => (
+            <TableCell {...props} colSpan={props.props.colSpan}>
+              {children}
+            </TableCell>
+          ),
           // Custom pagination bar
           paginationBar: () => {
             return (
@@ -262,6 +287,6 @@ export function UnstyledTable({
           },
         }}
       />
-    </div>
+    </>
   )
 }
