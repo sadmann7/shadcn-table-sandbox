@@ -33,7 +33,7 @@ export default async function IndexPage({ searchParams }: IndexPageProps) {
 
   return (
     <main className="container grid items-center py-6">
-      <UnstyledTable data={skaters} itemsCount={itemsCount} />
+      {/* <UnstyledTable data={skaters} itemsCount={itemsCount} /> */}
     </main>
   )
 }
