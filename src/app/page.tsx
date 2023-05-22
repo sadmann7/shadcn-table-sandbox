@@ -1,14 +1,8 @@
-import { faker } from "@faker-js/faker"
-import { type Skater } from "@prisma/client"
-
 import { prisma } from "@/lib/db"
 import { UnstyledTable } from "@/components/unstyled-table"
 
-faker.seed(69420)
-
 export type Sort = "name" | "age" | "email" | "stats" | "stance" | "deckPrice"
 export type Order = "asc" | "desc"
-export type Query = "name" | "email"
 
 interface IndexPageProps {
   searchParams: {
@@ -21,14 +15,16 @@ interface IndexPageProps {
 export default async function IndexPage({ searchParams }: IndexPageProps) {
   const { page, sort, order } = searchParams
 
+  // Current page number
   const pageNumber = typeof page === "string" ? +page : 1
-  const pageCount = 10
+  // Number of skaters to show per page
+  const itemsCount = 10
 
   // Get 10 skaters from the database
   const skaters = await prisma.skater.findMany({
     // For server-side pagination
-    take: pageCount,
-    skip: pageNumber * 10,
+    take: itemsCount,
+    skip: pageNumber * itemsCount,
     // For server-side sorting
     orderBy: {
       [sort ?? "name"]: order ?? "asc",
@@ -36,8 +32,8 @@ export default async function IndexPage({ searchParams }: IndexPageProps) {
   })
 
   return (
-    <main className="container py-6">
-      <UnstyledTable data={skaters} pageCount={pageCount} />
+    <main className="container grid items-center py-6">
+      <UnstyledTable data={skaters} itemsCount={itemsCount} />
     </main>
   )
 }

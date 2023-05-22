@@ -38,10 +38,10 @@ import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover"
 
 interface UnstyledTableProps {
   data: Skater[]
-  pageCount: number
+  itemsCount: number
 }
 
-export function UnstyledTable({ data, pageCount }: UnstyledTableProps) {
+export function UnstyledTable({ data, itemsCount }: UnstyledTableProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -130,7 +130,7 @@ export function UnstyledTable({ data, pageCount }: UnstyledTableProps) {
 
   const [sorting] = React.useState<ColumnSort[]>([
     {
-      id: sort ?? "name",
+      id: sort ?? ("name" satisfies Sort),
       desc: order === "desc" ? true : false,
     },
   ])
@@ -223,10 +223,10 @@ export function UnstyledTable({ data, pageCount }: UnstyledTableProps) {
             paginationBar: () => {
               return (
                 <ReactPaginate
-                  pageCount={pageCount}
+                  pageCount={Number(itemsCount - 1) ?? 9}
                   pageRangeDisplayed={5}
                   marginPagesDisplayed={2}
-                  className="flex items-center gap-2.5 p-4"
+                  className="flex flex-wrap items-center gap-2.5 p-4"
                   pageClassName={cn(
                     buttonVariants({
                       size: "sm",
