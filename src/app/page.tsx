@@ -9,11 +9,12 @@ interface IndexPageProps {
     page?: string
     sort?: Sort
     order?: Order
+    query?: string
   }
 }
 
 export default async function IndexPage({ searchParams }: IndexPageProps) {
-  const { page, sort, order } = searchParams
+  const { page, sort, order, query } = searchParams
 
   // Current page number
   const pageNumber = typeof page === "string" ? +page : 1
@@ -29,6 +30,10 @@ export default async function IndexPage({ searchParams }: IndexPageProps) {
       // For server-side sorting
       orderBy: {
         [sort ?? "name"]: order ?? "asc",
+      },
+      // For server-side filtering
+      where: {
+        email: query ? { contains: query, mode: "insensitive" } : undefined,
       },
     }),
     prisma.skater.count(),

@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { useRouter, useSearchParams } from "next/navigation"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { type Skater } from "@prisma/client"
 import { ChevronDown, MoreHorizontal } from "lucide-react"
 import { toast } from "react-hot-toast"
@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/table"
 import type { Order, Sort } from "@/app/page"
 
+import { DebouncedInput } from "./debounced-input"
 import { Button } from "./ui/button"
 import { Input } from "./ui/input"
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover"
@@ -47,7 +48,39 @@ export function UnstyledTable({
   pageCount,
 }: UnstyledTableProps) {
   const router = useRouter()
+  const path = usePathname()
   const searchParams = useSearchParams()
+
+  // Handle server-side stuffs
+  const page = searchParams.get("page") ?? "1"
+  const sort = (searchParams.get("sort") as Sort) ?? "name"
+  const order = searchParams.get("order") as Order | null
+  const query = searchParams.get("query")
+
+  const [sorting] = React.useState<ColumnSort[]>([
+    {
+      id: sort,
+      desc: order === "desc" ? true : false,
+    },
+  ])
+
+  // create query string
+  const createQueryString = React.useCallback(
+    (params: Record<string, string | number | null>) => {
+      const newSearchParams = new URLSearchParams(searchParams)
+
+      for (const [key, value] of Object.entries(params)) {
+        if (value === null) {
+          newSearchParams.delete(key)
+        } else {
+          newSearchParams.set(key, String(value))
+        }
+      }
+
+      return newSearchParams.toString()
+    },
+    [searchParams]
+  )
 
   // Memoize the columns so they don't re-render on every render
   const columns = React.useMemo<ColumnDef<Skater, unknown>[]>(
@@ -55,12 +88,11 @@ export function UnstyledTable({
       {
         accessorKey: "name",
         header: "Name",
-        // Disable column filter for this column
-        enableColumnFilter: false,
       },
       {
         accessorKey: "age",
         header: "Age",
+        // Disable column filter for this column
         enableColumnFilter: false,
         // Disable sorting for this column
         enableSorting: false,
@@ -68,7 +100,6 @@ export function UnstyledTable({
       {
         accessorKey: "email",
         header: "Email",
-        enableColumnFilter: false,
       },
       { accessorKey: "stats", header: "Stats", enableColumnFilter: false },
       {
@@ -78,7 +109,6 @@ export function UnstyledTable({
         cell: ({ row }) => (
           <span className="capitalize">{row.getValue("stance")}</span>
         ),
-        enableColumnFilter: false,
       },
       {
         accessorKey: "deckPrice",
@@ -86,7 +116,6 @@ export function UnstyledTable({
         header: () => <span className="text-left">Deck Price</span>,
         // Cell value formatting
         cell: ({ row }) => formatPrice(row.getValue("deckPrice")),
-        enableColumnFilter: false,
       },
       // Actions column
       {
@@ -130,30 +159,36 @@ export function UnstyledTable({
   // Handle global filtering
   const [globalFilter, setGlobalFilter] = React.useState("")
 
+  // Handle email filtering
+  // Without any state, the input will be uncontrolled
+  // and will not update when the query changes
+  const [emailFilter, setEmailFilter] = React.useState(query ?? "")
+
   // Handle column visibility
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({})
-
-  // Handle server-side stuffs
-  const page = searchParams.get("page")
-  const sort = searchParams.get("sort") as Sort | null
-  const order = searchParams.get("order") as Order | null
-
-  const [sorting] = React.useState<ColumnSort[]>([
-    {
-      id: sort ?? ("name" satisfies Sort),
-      desc: order === "desc" ? true : false,
-    },
-  ])
 
   return (
     <React.Fragment>
       <div className="flex items-center justify-between gap-5 py-4">
         <Input
+          className="hidden max-w-xs"
           placeholder="Search..."
-          className="max-w-xs"
           value={globalFilter}
           onChange={(e) => setGlobalFilter(e.target.value)}
+        />
+        <DebouncedInput
+          className="max-w-xs"
+          placeholder="Filter emails.."
+          value={emailFilter}
+          onChange={(value) => {
+            setEmailFilter(value.toString())
+            router.push(
+              `${path}?${createQueryString({
+                query: value.toString(),
+              })}`
+            )
+          }}
         />
         <Popover>
           <PopoverTrigger asChild>
@@ -217,11 +252,11 @@ export function UnstyledTable({
                 // Update the URL with the new sort order if the column is sortable
                 isSortable &&
                   router.push(
-                    `/?page=${page ? page : 1}${
-                      nextSortDirection === false
-                        ? ""
-                        : `&sort=${header.column.id}&order=${nextSortDirection}`
-                    }`
+                    `${path}?${createQueryString({
+                      page: page,
+                      sort: nextSortDirection ? header.column.id : null,
+                      order: nextSortDirection ? nextSortDirection : null,
+                    })}`
                   )
               }}
             >
@@ -230,7 +265,11 @@ export function UnstyledTable({
           ),
           body: ({ children }) => <TableBody>{children}</TableBody>,
           bodyRow: ({ children }) => <TableRow>{children}</TableRow>,
-          bodyCell: ({ children }) => <TableCell>{children}</TableCell>,
+          bodyCell: ({ children }) => (
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <TableCell>{children}</TableCell>
+            </React.Suspense>
+          ),
           // Custom pagination bar
           paginationBar: () => {
             return (
@@ -240,9 +279,9 @@ export function UnstyledTable({
                   size="sm"
                   onClick={() => {
                     router.push(
-                      `/?page=${Number(page) - 1}${
-                        sort && order ? `&sort=${sort}&order=${order}` : ""
-                      }`
+                      `${path}?${createQueryString({
+                        page: Number(page) - 1,
+                      })}`
                     )
                   }}
                   disabled={Number(page) === 1}
@@ -255,9 +294,9 @@ export function UnstyledTable({
                   size="sm"
                   onClick={() => {
                     router.push(
-                      `/?page=${Number(page) + 1}${
-                        sort && order ? `&sort=${sort}&order=${order}` : ""
-                      }`
+                      `${path}?${createQueryString({
+                        page: Number(page) + 1,
+                      })}`
                     )
                   }}
                   disabled={Number(page) === pageCount ?? 10}
