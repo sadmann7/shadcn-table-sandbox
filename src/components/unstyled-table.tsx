@@ -37,7 +37,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover"
 
 interface UnstyledTableProps {
   data: Skater[]
-  itemsCount: number
+  itemsCount?: number
   pageCount?: number
 }
 
@@ -136,8 +136,8 @@ export function UnstyledTable({
 
   // Handle server-side stuffs
   const page = searchParams.get("page")
-  const sort = searchParams.get("sort") as Sort
-  const order = searchParams.get("order") as Order
+  const sort = searchParams.get("sort") as Sort | null
+  const order = searchParams.get("order") as Order | null
 
   const [sorting] = React.useState<ColumnSort[]>([
     {
@@ -145,20 +145,6 @@ export function UnstyledTable({
       desc: order === "desc" ? true : false,
     },
   ])
-
-  // Detect horizontally overflowing elements
-  // Remove this in production
-  React.useEffect(() => {
-    const docWidth = document.documentElement.offsetWidth
-    ;[].forEach.call(
-      document.querySelectorAll("*"),
-      function (element: HTMLElement) {
-        if (element.offsetWidth > docWidth) {
-          console.log(element)
-        }
-      }
-    )
-  }, [])
 
   return (
     <React.Fragment>
@@ -255,7 +241,7 @@ export function UnstyledTable({
                   onClick={() => {
                     router.push(
                       `/?page=${Number(page) - 1}${
-                        sort ? `&sort=${sort}&order=${order}` : ""
+                        sort && order ? `&sort=${sort}&order=${order}` : ""
                       }`
                     )
                   }}
@@ -270,7 +256,7 @@ export function UnstyledTable({
                   onClick={() => {
                     router.push(
                       `/?page=${Number(page) + 1}${
-                        sort ? `&sort=${sort}&order=${order}` : ""
+                        sort && order ? `&sort=${sort}&order=${order}` : ""
                       }`
                     )
                   }}

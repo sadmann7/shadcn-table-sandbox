@@ -20,7 +20,7 @@ export default async function IndexPage({ searchParams }: IndexPageProps) {
   // Number of skaters to show per page
   const itemsCount = 10
 
-  // Fetch skaters and total skaters count in a single query
+  // Get skaters and total skaters count in a single query
   const [skaters, totalSkaters] = await prisma.$transaction([
     prisma.skater.findMany({
       // For server-side pagination
