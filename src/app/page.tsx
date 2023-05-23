@@ -27,13 +27,13 @@ export default async function IndexPage({ searchParams }: IndexPageProps) {
       // For server-side pagination
       take: itemsCount,
       skip: (pageNumber - 1) * itemsCount,
-      // For server-side sorting
-      orderBy: {
-        [sort ?? "name"]: order ?? "asc",
-      },
       // For server-side filtering
       where: {
         email: query ? { contains: query, mode: "insensitive" } : undefined,
+      },
+      // For server-side sorting
+      orderBy: {
+        [sort ?? "name"]: order ?? "asc",
       },
     }),
     prisma.skater.count(),

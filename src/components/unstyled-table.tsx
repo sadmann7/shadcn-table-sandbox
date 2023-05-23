@@ -51,18 +51,10 @@ export function UnstyledTable({
   const path = usePathname()
   const searchParams = useSearchParams()
 
-  // Handle server-side stuffs
   const page = searchParams.get("page") ?? "1"
   const sort = (searchParams.get("sort") as Sort) ?? "name"
   const order = searchParams.get("order") as Order | null
   const query = searchParams.get("query")
-
-  const [sorting] = React.useState<ColumnSort[]>([
-    {
-      id: sort,
-      desc: order === "desc" ? true : false,
-    },
-  ])
 
   // create query string
   const createQueryString = React.useCallback(
@@ -159,14 +151,20 @@ export function UnstyledTable({
   // Handle global filtering
   const [globalFilter, setGlobalFilter] = React.useState("")
 
-  // Handle email filtering
-  // Without any state, the input will be uncontrolled
-  // and will not update when the query changes
-  const [emailFilter, setEmailFilter] = React.useState(query ?? "")
-
   // Handle column visibility
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({})
+
+  // Handle server-side sorting
+  const [sorting] = React.useState<ColumnSort[]>([
+    {
+      id: sort,
+      desc: order === "desc" ? true : false,
+    },
+  ])
+
+  // Handle server-side column (email) filtering
+  const [emailFilter, setEmailFilter] = React.useState(query ?? "")
 
   return (
     <React.Fragment>
@@ -185,6 +183,7 @@ export function UnstyledTable({
             setEmailFilter(value.toString())
             router.push(
               `${path}?${createQueryString({
+                page: page,
                 query: value.toString(),
               })}`
             )
@@ -236,6 +235,7 @@ export function UnstyledTable({
         setColumnVisibility={setColumnVisibility}
         // Handle server-side sorting
         manualPagination
+        manualFiltering
         itemsCount={itemsCount ?? 10}
         renders={{
           table: ({ children }) => <Table>{children}</Table>,
@@ -263,13 +263,25 @@ export function UnstyledTable({
               {children}
             </TableHead>
           ),
-          body: ({ children }) => <TableBody>{children}</TableBody>,
-          bodyRow: ({ children }) => <TableRow>{children}</TableRow>,
-          bodyCell: ({ children }) => (
-            <React.Suspense fallback={<div>Loading...</div>}>
-              <TableCell>{children}</TableCell>
-            </React.Suspense>
+          body: ({ children }) => (
+            <TableBody>
+              {data.length ? (
+                children
+              ) : (
+                <TableRow>
+                  <TableCell
+                    colSpan={columns.length}
+                    className="h-24 text-center"
+                  >
+                    No results.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
           ),
+          bodyRow: ({ children }) => <TableRow>{children}</TableRow>,
+          bodyCell: ({ children }) => <TableCell>{children}</TableCell>,
+          filterInput: ({}) => null,
           // Custom pagination bar
           paginationBar: () => {
             return (
