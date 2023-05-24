@@ -1,3 +1,5 @@
+import React from "react"
+
 import { prisma } from "@/lib/db"
 import { UnstyledTable } from "@/components/unstyled-table"
 
@@ -7,6 +9,7 @@ export type Order = "asc" | "desc"
 interface IndexPageProps {
   searchParams: {
     page?: string
+    items?: string
     sort?: Sort
     order?: Order
     query?: string
@@ -14,10 +17,10 @@ interface IndexPageProps {
 }
 
 export default async function IndexPage({ searchParams }: IndexPageProps) {
-  const { page, sort, order, query } = searchParams
+  const { page, items, sort, order, query } = searchParams
 
   // Number of skaters to show per page
-  const limit = 10
+  const limit = items ? parseInt(items) : 10
   // Number of skaters to skip
   const offset = page ? (parseInt(page) - 1) * limit : 1
 
@@ -42,7 +45,7 @@ export default async function IndexPage({ searchParams }: IndexPageProps) {
 
   return (
     <main className="container grid items-center py-6">
-      <UnstyledTable data={skaters} itemsCount={limit} pageCount={pageCount} />
+      <UnstyledTable data={skaters} pageCount={pageCount} />
     </main>
   )
 }

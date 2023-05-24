@@ -3,7 +3,14 @@
 import * as React from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { type Skater } from "@prisma/client"
-import { ChevronDown, MoreHorizontal } from "lucide-react"
+import {
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+  MoreHorizontal,
+} from "lucide-react"
 import { toast } from "react-hot-toast"
 import {
   Table as ShadcnTable,
@@ -22,6 +29,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import {
   Table,
   TableBody,
   TableCell,
@@ -38,20 +52,16 @@ import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover"
 
 interface UnstyledTableProps {
   data: Skater[]
-  itemsCount?: number
   pageCount?: number
 }
 
-export function UnstyledTable({
-  data,
-  itemsCount,
-  pageCount,
-}: UnstyledTableProps) {
+export function UnstyledTable({ data, pageCount }: UnstyledTableProps) {
   const router = useRouter()
   const path = usePathname()
   const searchParams = useSearchParams()
 
   const page = searchParams.get("page") ?? "1"
+  const items = searchParams.get("items") ?? "10"
   const sort = (searchParams.get("sort") ?? "name") as Sort
   const order = searchParams.get("order") as Order | null
   const query = searchParams.get("query")
@@ -236,7 +246,7 @@ export function UnstyledTable({
         // Handle server-side sorting
         manualPagination
         manualFiltering
-        itemsCount={itemsCount ?? 10}
+        itemsCount={Number(items)}
         renders={{
           table: ({ children }) => <Table>{children}</Table>,
           header: ({ children }) => <TableHeader>{children}</TableHeader>,
@@ -285,37 +295,108 @@ export function UnstyledTable({
           // Custom pagination bar
           paginationBar: () => {
             return (
-              <div className="flex items-center justify-end space-x-2 py-4">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    router.push(
-                      `${path}?${createQueryString({
-                        page: Number(page) - 1,
-                      })}`
-                    )
-                  }}
-                  disabled={Number(page) === 1}
-                >
-                  Previous
-                  <span className="sr-only">Previous page</span>
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    router.push(
-                      `${path}?${createQueryString({
-                        page: Number(page) + 1,
-                      })}`
-                    )
-                  }}
-                  disabled={Number(page) === pageCount ?? 10}
-                >
-                  Next
-                  <span className="sr-only">Next page</span>
-                </Button>
+              <div className="flex flex-col-reverse items-center gap-4 py-4 md:flex-row">
+                <div className="flex-1 text-sm font-medium">
+                  {items.length} of {items.length} row(s) selected.
+                </div>
+                <div className="flex flex-col items-center gap-3 sm:flex-row sm:gap-6">
+                  <div className="flex flex-wrap items-center space-x-2">
+                    <span className="text-sm font-medium">
+                      Results per page
+                    </span>
+                    <Select
+                      value={items}
+                      onValueChange={(value) => {
+                        router.push(
+                          `${path}?${createQueryString({
+                            page: page,
+                            items: value,
+                          })}`
+                        )
+                      }}
+                    >
+                      <SelectTrigger className="h-8 w-16">
+                        <SelectValue placeholder={items} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {[10, 20, 30, 40, 50].map((item) => (
+                          <SelectItem key={item} value={item.toString()}>
+                            {item}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="text-sm font-medium">
+                    {`Page ${page} of ${pageCount ?? 10}`}
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8 w-8 px-0"
+                      onClick={() => {
+                        router.push(
+                          `${path}?${createQueryString({
+                            page: 1,
+                          })}`
+                        )
+                      }}
+                      disabled={Number(page) === 1}
+                    >
+                      <ChevronsLeft className="h-5 w-5" aria-hidden="true" />
+                      <span className="sr-only">First page</span>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8 w-8 px-0"
+                      onClick={() => {
+                        router.push(
+                          `${path}?${createQueryString({
+                            page: Number(page) - 1,
+                          })}`
+                        )
+                      }}
+                      disabled={Number(page) === 1}
+                    >
+                      <ChevronLeft className="h-5 w-5" aria-hidden="true" />
+                      <span className="sr-only">Previous page</span>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8 w-8 px-0"
+                      onClick={() => {
+                        router.push(
+                          `${path}?${createQueryString({
+                            page: Number(page) + 1,
+                          })}`
+                        )
+                      }}
+                      disabled={Number(page) === pageCount ?? 10}
+                    >
+                      <ChevronRight className="h-5 w-5" aria-hidden="true" />
+                      <span className="sr-only">Next page</span>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8 w-8 px-0"
+                      onClick={() => {
+                        router.push(
+                          `${path}?${createQueryString({
+                            page: pageCount ?? 10,
+                          })}`
+                        )
+                      }}
+                      disabled={Number(page) === pageCount ?? 10}
+                    >
+                      <ChevronsRight className="h-5 w-5" aria-hidden="true" />
+                      <span className="sr-only">Last page</span>
+                    </Button>
+                  </div>
+                </div>
               </div>
             )
           },
