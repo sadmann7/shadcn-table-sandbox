@@ -16,6 +16,7 @@ import {
   Table as ShadcnTable,
   type ColumnDef,
   type ColumnSort,
+  type Row,
   type VisibilityState,
 } from "unstyled-table"
 
@@ -43,6 +44,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { deleteSkaters } from "@/app/_actions/skater"
 import type { Order, Sort } from "@/app/page"
 
 import { DebouncedInput } from "./debounced-input"
@@ -50,6 +52,7 @@ import { Button } from "./ui/button"
 import { Checkbox } from "./ui/checkbox"
 import { Input } from "./ui/input"
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover"
+import { Skeleton } from "./ui/skeleton"
 
 interface UnstyledTableProps {
   data: Skater[]
@@ -89,6 +92,10 @@ export function UnstyledTable({ data, pageCount }: UnstyledTableProps) {
     [searchParams]
   )
 
+  // Handle row selection
+  const [rowSelection, setRowSelection] = React.useState({})
+  const [selectedRows, setSelectedRows] = React.useState<Row<Skater>[]>([])
+
   // Memoize the columns so they don't re-render on every render
   const columns = React.useMemo<ColumnDef<Skater, unknown>[]>(
     () => [
@@ -98,16 +105,24 @@ export function UnstyledTable({ data, pageCount }: UnstyledTableProps) {
         header: ({ table }) => (
           <Checkbox
             checked={table.getIsAllPageRowsSelected()}
-            onCheckedChange={(value) =>
+            onCheckedChange={(value) => {
               table.toggleAllPageRowsSelected(!!value)
-            }
+              //* This is a workaround for row selection without using the Row Selection API
+              setSelectedRows(value ? table.getRowModel().rows : [])
+            }}
             aria-label="Select all"
           />
         ),
         cell: ({ row }) => (
           <Checkbox
             checked={row.getIsSelected()}
-            onCheckedChange={(value) => row.toggleSelected(!!value)}
+            onCheckedChange={(value) => {
+              row.toggleSelected(!!value)
+              //* This is a workaround for row selection without using the Row Selection API
+              setSelectedRows((rows) =>
+                value ? [...rows, row] : rows.filter((r) => r !== row)
+              )
+            }}
             aria-label="Select row"
           />
         ),
@@ -193,9 +208,6 @@ export function UnstyledTable({ data, pageCount }: UnstyledTableProps) {
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({})
 
-  // Handle row selection
-  const [rowSelection, setRowSelection] = React.useState({})
-
   // Handle server-side column (email) filtering
   const [emailFilter, setEmailFilter] = React.useState(query ?? "")
 
@@ -206,6 +218,8 @@ export function UnstyledTable({ data, pageCount }: UnstyledTableProps) {
       desc: order === "desc" ? true : false,
     },
   ])
+
+  console.log(selectedRows)
 
   return (
     <React.Fragment>
@@ -232,39 +246,58 @@ export function UnstyledTable({ data, pageCount }: UnstyledTableProps) {
             })
           }}
         />
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button variant="outline" className="ml-auto">
-              Columns
-              <ChevronDown className="-mr-1 ml-2 h-5 w-5" aria-hidden="true" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent align="end" className="w-auto min-w-[8rem] p-1">
-            <div className="flex items-center space-x-2 rounded-sm p-2 text-sm outline-none transition-colors hover:bg-accent focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50">
-              <input id="toggleAllColumns" type="checkbox" className="peer" />
-              <label
-                htmlFor="toggleAllColumns"
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-              >
-                Toggle All
-              </label>
-            </div>
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div
-                key={i}
-                className="flex items-center space-x-2 rounded-sm p-2 text-sm outline-none transition-colors hover:bg-accent focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
-              >
-                <input type="checkbox" id={i.toString()} className="peer" />
+        <div className="flex items-center space-x-2">
+          <Button
+            aria-label="Delete rows"
+            variant="destructive"
+            onClick={() => {
+              startTransition(() => {
+                void deleteSkaters(selectedRows.map((row) => row.original.id))
+                setSelectedRows([])
+                toast.success("Skaters deleted")
+              })
+            }}
+            disabled={isPending || !selectedRows.length}
+          >
+            Delete rows
+          </Button>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="ml-auto">
+                Columns
+                <ChevronDown
+                  className="-mr-1 ml-2 h-5 w-5"
+                  aria-hidden="true"
+                />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-auto min-w-[8rem] p-1">
+              <div className="flex items-center space-x-2 rounded-sm p-2 text-sm outline-none transition-colors hover:bg-accent focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50">
+                <input id="toggleAllColumns" type="checkbox" className="peer" />
                 <label
-                  htmlFor={i.toString()}
+                  htmlFor="toggleAllColumns"
                   className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                 >
-                  {`Column ${i}`}
+                  Toggle All
                 </label>
               </div>
-            ))}
-          </PopoverContent>
-        </Popover>
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="flex items-center space-x-2 rounded-sm p-2 text-sm outline-none transition-colors hover:bg-accent focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
+                >
+                  <input type="checkbox" id={i.toString()} className="peer" />
+                  <label
+                    htmlFor={i.toString()}
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    {`Column ${i}`}
+                  </label>
+                </div>
+              ))}
+            </PopoverContent>
+          </Popover>
+        </div>
       </div>
       <ShadcnTable
         columns={columns}
@@ -293,8 +326,8 @@ export function UnstyledTable({ data, pageCount }: UnstyledTableProps) {
                 const nextSortDirection = header.column.getNextSortingOrder()
 
                 // Update the URL with the new sort order if the column is sortable
-                startTransition(() => {
-                  isSortable &&
+                isSortable &&
+                  startTransition(() => {
                     router.push(
                       `${path}?${createQueryString({
                         page: page,
@@ -302,7 +335,7 @@ export function UnstyledTable({ data, pageCount }: UnstyledTableProps) {
                         order: nextSortDirection ? nextSortDirection : null,
                       })}`
                     )
-                })
+                  })
               }}
             >
               {children}
@@ -310,38 +343,33 @@ export function UnstyledTable({ data, pageCount }: UnstyledTableProps) {
           ),
           body: ({ children }) => (
             <TableBody>
-              {isPending ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={columns.length}
-                    className="h-24 text-center"
-                  >
-                    Loading...
-                  </TableCell>
-                </TableRow>
-              ) : data.length ? (
-                children
-              ) : (
-                <TableRow>
-                  <TableCell
-                    colSpan={columns.length}
-                    className="h-24 text-center"
-                  >
-                    No results.
-                  </TableCell>
-                </TableRow>
-              )}
+              {data.length
+                ? children
+                : !isPending && (
+                    <TableRow>
+                      <TableCell
+                        colSpan={columns.length}
+                        className="h-24 text-center"
+                      >
+                        No results.
+                      </TableCell>
+                    </TableRow>
+                  )}
             </TableBody>
           ),
           bodyRow: ({ children }) => <TableRow>{children}</TableRow>,
-          bodyCell: ({ children }) => <TableCell>{children}</TableCell>,
+          bodyCell: ({ children }) => (
+            <TableCell>
+              {isPending ? <Skeleton className="h-6 w-20" /> : children}
+            </TableCell>
+          ),
           filterInput: ({}) => null,
           // Custom pagination bar
           paginationBar: () => {
             return (
               <div className="flex flex-col-reverse items-center gap-4 py-4 md:flex-row">
                 <div className="flex-1 text-sm font-medium">
-                  {items.length} of {items.length} row(s) selected.
+                  {selectedRows.length} of {items} row(s) selected.
                 </div>
                 <div className="flex flex-col items-center gap-3 sm:flex-row sm:gap-6">
                   <div className="flex flex-wrap items-center space-x-2">
