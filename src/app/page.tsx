@@ -25,8 +25,8 @@ export default async function IndexPage({ searchParams }: IndexPageProps) {
   const [skaters, totalSkaters] = await prisma.$transaction([
     prisma.skater.findMany({
       // For server-side pagination
-      take: itemsCount,
-      skip: (pageNumber - 1) * itemsCount,
+      take: query ? undefined : itemsCount,
+      skip: query ? undefined : (pageNumber - 1) * itemsCount,
       // For server-side filtering
       where: {
         email: query ? { contains: query, mode: "insensitive" } : undefined,

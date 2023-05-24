@@ -155,16 +155,16 @@ export function UnstyledTable({
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({})
 
-  // Handle server-side sorting
+  // Handle server-side column (email) filtering
+  const [emailFilter, setEmailFilter] = React.useState(query ?? "")
+
+  // Handle server-side column sorting
   const [sorting] = React.useState<ColumnSort[]>([
     {
       id: sort,
       desc: order === "desc" ? true : false,
     },
   ])
-
-  // Handle server-side column (email) filtering
-  const [emailFilter, setEmailFilter] = React.useState(query ?? "")
 
   return (
     <React.Fragment>
