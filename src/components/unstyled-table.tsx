@@ -47,6 +47,7 @@ import type { Order, Sort } from "@/app/page"
 
 import { DebouncedInput } from "./debounced-input"
 import { Button } from "./ui/button"
+import { Checkbox } from "./ui/checkbox"
 import { Input } from "./ui/input"
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover"
 
@@ -59,6 +60,10 @@ export function UnstyledTable({ data, pageCount }: UnstyledTableProps) {
   const router = useRouter()
   const path = usePathname()
   const searchParams = useSearchParams()
+
+  // This lets us update states without blocking the UI
+  // Read more: https://react.dev/reference/react/useTransition#usage
+  const [isPending, startTransition] = React.useTransition()
 
   const page = searchParams.get("page") ?? "1"
   const items = searchParams.get("items") ?? "10"
@@ -87,6 +92,29 @@ export function UnstyledTable({ data, pageCount }: UnstyledTableProps) {
   // Memoize the columns so they don't re-render on every render
   const columns = React.useMemo<ColumnDef<Skater, unknown>[]>(
     () => [
+      {
+        // Column for row selection
+        id: "select",
+        header: ({ table }) => (
+          <Checkbox
+            checked={table.getIsAllPageRowsSelected()}
+            onCheckedChange={(value) =>
+              table.toggleAllPageRowsSelected(!!value)
+            }
+            aria-label="Select all"
+          />
+        ),
+        cell: ({ row }) => (
+          <Checkbox
+            checked={row.getIsSelected()}
+            onCheckedChange={(value) => row.toggleSelected(!!value)}
+            aria-label="Select row"
+          />
+        ),
+        // Disable column sorting for this column
+        enableSorting: false,
+        enableHiding: false,
+      },
       {
         accessorKey: "name",
         header: "Name",
@@ -119,8 +147,8 @@ export function UnstyledTable({ data, pageCount }: UnstyledTableProps) {
         // Cell value formatting
         cell: ({ row }) => formatPrice(row.getValue("deckPrice")),
       },
-      // Actions column
       {
+        // Column for row actions
         id: "actions",
         cell: ({ row }) => {
           const skater = row.original
@@ -165,6 +193,9 @@ export function UnstyledTable({ data, pageCount }: UnstyledTableProps) {
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({})
 
+  // Handle row selection
+  const [rowSelection, setRowSelection] = React.useState({})
+
   // Handle server-side column (email) filtering
   const [emailFilter, setEmailFilter] = React.useState(query ?? "")
 
@@ -191,12 +222,14 @@ export function UnstyledTable({ data, pageCount }: UnstyledTableProps) {
           value={emailFilter}
           onChange={(value) => {
             setEmailFilter(value.toString())
-            router.push(
-              `${path}?${createQueryString({
-                page: page,
-                query: value.toString(),
-              })}`
-            )
+            startTransition(() => {
+              router.push(
+                `${path}?${createQueryString({
+                  page: page,
+                  query: value.toString(),
+                })}`
+              )
+            })
           }}
         />
         <Popover>
@@ -260,14 +293,16 @@ export function UnstyledTable({ data, pageCount }: UnstyledTableProps) {
                 const nextSortDirection = header.column.getNextSortingOrder()
 
                 // Update the URL with the new sort order if the column is sortable
-                isSortable &&
-                  router.push(
-                    `${path}?${createQueryString({
-                      page: page,
-                      sort: nextSortDirection ? header.column.id : null,
-                      order: nextSortDirection ? nextSortDirection : null,
-                    })}`
-                  )
+                startTransition(() => {
+                  isSortable &&
+                    router.push(
+                      `${path}?${createQueryString({
+                        page: page,
+                        sort: nextSortDirection ? header.column.id : null,
+                        order: nextSortDirection ? nextSortDirection : null,
+                      })}`
+                    )
+                })
               }}
             >
               {children}
@@ -275,7 +310,16 @@ export function UnstyledTable({ data, pageCount }: UnstyledTableProps) {
           ),
           body: ({ children }) => (
             <TableBody>
-              {data.length ? (
+              {isPending ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={columns.length}
+                    className="h-24 text-center"
+                  >
+                    Loading...
+                  </TableCell>
+                </TableRow>
+              ) : data.length ? (
                 children
               ) : (
                 <TableRow>
@@ -301,19 +345,22 @@ export function UnstyledTable({ data, pageCount }: UnstyledTableProps) {
                 </div>
                 <div className="flex flex-col items-center gap-3 sm:flex-row sm:gap-6">
                   <div className="flex flex-wrap items-center space-x-2">
-                    <span className="text-sm font-medium">
-                      Results per page
-                    </span>
+                    <span className="text-sm font-medium">Rows per page</span>
                     <Select
                       value={items}
                       onValueChange={(value) => {
-                        router.push(
-                          `${path}?${createQueryString({
-                            page: page,
-                            items: value,
-                          })}`
-                        )
+                        startTransition(() => {
+                          router.push(
+                            `${path}?${createQueryString({
+                              page: page,
+                              items: value,
+                              sort: sort,
+                              order: order,
+                            })}`
+                          )
+                        })
                       }}
+                      disabled={isPending}
                     >
                       <SelectTrigger className="h-8 w-16">
                         <SelectValue placeholder={items} />
@@ -336,13 +383,18 @@ export function UnstyledTable({ data, pageCount }: UnstyledTableProps) {
                       size="sm"
                       className="h-8 w-8 px-0"
                       onClick={() => {
-                        router.push(
-                          `${path}?${createQueryString({
-                            page: 1,
-                          })}`
-                        )
+                        startTransition(() => {
+                          router.push(
+                            `${path}?${createQueryString({
+                              page: 1,
+                              items: items,
+                              sort: sort,
+                              order: order,
+                            })}`
+                          )
+                        })
                       }}
-                      disabled={Number(page) === 1}
+                      disabled={Number(page) === 1 || isPending}
                     >
                       <ChevronsLeft className="h-5 w-5" aria-hidden="true" />
                       <span className="sr-only">First page</span>
@@ -352,13 +404,18 @@ export function UnstyledTable({ data, pageCount }: UnstyledTableProps) {
                       size="sm"
                       className="h-8 w-8 px-0"
                       onClick={() => {
-                        router.push(
-                          `${path}?${createQueryString({
-                            page: Number(page) - 1,
-                          })}`
-                        )
+                        startTransition(() => {
+                          router.push(
+                            `${path}?${createQueryString({
+                              page: Number(page) - 1,
+                              items: items,
+                              sort: sort,
+                              order: order,
+                            })}`
+                          )
+                        })
                       }}
-                      disabled={Number(page) === 1}
+                      disabled={Number(page) === 1 || isPending}
                     >
                       <ChevronLeft className="h-5 w-5" aria-hidden="true" />
                       <span className="sr-only">Previous page</span>
@@ -368,13 +425,18 @@ export function UnstyledTable({ data, pageCount }: UnstyledTableProps) {
                       size="sm"
                       className="h-8 w-8 px-0"
                       onClick={() => {
-                        router.push(
-                          `${path}?${createQueryString({
-                            page: Number(page) + 1,
-                          })}`
-                        )
+                        startTransition(() => {
+                          router.push(
+                            `${path}?${createQueryString({
+                              page: Number(page) + 1,
+                              items: items,
+                              sort: sort,
+                              order: order,
+                            })}`
+                          )
+                        })
                       }}
-                      disabled={Number(page) === pageCount ?? 10}
+                      disabled={Number(page) === (pageCount ?? 10) || isPending}
                     >
                       <ChevronRight className="h-5 w-5" aria-hidden="true" />
                       <span className="sr-only">Next page</span>
@@ -387,10 +449,13 @@ export function UnstyledTable({ data, pageCount }: UnstyledTableProps) {
                         router.push(
                           `${path}?${createQueryString({
                             page: pageCount ?? 10,
+                            items: items,
+                            sort: sort,
+                            order: order,
                           })}`
                         )
                       }}
-                      disabled={Number(page) === pageCount ?? 10}
+                      disabled={Number(page) === (pageCount ?? 10) || isPending}
                     >
                       <ChevronsRight className="h-5 w-5" aria-hidden="true" />
                       <span className="sr-only">Last page</span>
