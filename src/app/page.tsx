@@ -16,39 +16,33 @@ interface IndexPageProps {
 export default async function IndexPage({ searchParams }: IndexPageProps) {
   const { page, sort, order, query } = searchParams
 
-  // Current page number
-  const pageNumber = typeof page === "string" ? +page : 1
   // Number of skaters to show per page
-  const itemsCount = 10
+  const limit = 10
+  // Number of skaters to skip
+  const offset = page ? (parseInt(page) - 1) * limit : 1
 
   // Get skaters and total skaters count in a single query
   const [skaters, totalSkaters] = await prisma.$transaction([
     prisma.skater.findMany({
       // For server-side pagination
-      take: query ? undefined : itemsCount,
-      skip: query ? undefined : (pageNumber - 1) * itemsCount,
+      take: query ? undefined : limit,
+      skip: query ? undefined : offset,
       // For server-side filtering
       where: {
         email: query ? { contains: query, mode: "insensitive" } : undefined,
       },
       // For server-side sorting
-      orderBy: {
-        [sort ?? "name"]: order ?? "asc",
-      },
+      orderBy: sort ? { [sort]: order ?? "asc" } : undefined,
     }),
     prisma.skater.count(),
   ])
 
   // Page count
-  const pageCount = Math.ceil(totalSkaters / itemsCount)
+  const pageCount = Math.ceil(totalSkaters / limit)
 
   return (
     <main className="container grid items-center py-6">
-      <UnstyledTable
-        data={skaters}
-        itemsCount={itemsCount}
-        pageCount={pageCount}
-      />
+      <UnstyledTable data={skaters} itemsCount={limit} pageCount={pageCount} />
     </main>
   )
 }

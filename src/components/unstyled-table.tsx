@@ -52,14 +52,14 @@ export function UnstyledTable({
   const searchParams = useSearchParams()
 
   const page = searchParams.get("page") ?? "1"
-  const sort = (searchParams.get("sort") as Sort) ?? "name"
+  const sort = (searchParams.get("sort") ?? "name") as Sort
   const order = searchParams.get("order") as Order | null
   const query = searchParams.get("query")
 
   // create query string
   const createQueryString = React.useCallback(
     (params: Record<string, string | number | null>) => {
-      const newSearchParams = new URLSearchParams(searchParams)
+      const newSearchParams = new URLSearchParams(searchParams.toString())
 
       for (const [key, value] of Object.entries(params)) {
         if (value === null) {
