@@ -16,12 +16,8 @@ import { ThemeToggle } from "@/components/theme-toggle"
 
 const navItems = [
   {
-    title: "Search Params",
-    href: "/",
-  },
-  {
     title: "Server Controlled",
-    href: "/server-controlled",
+    href: "/",
   },
   {
     title: "Client Controlled",

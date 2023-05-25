@@ -54,12 +54,15 @@ import { Input } from "./ui/input"
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover"
 import { Skeleton } from "./ui/skeleton"
 
-interface SearchParamsTableProps {
+interface ServerControlledTableProps {
   data: Skater[]
   pageCount?: number
 }
 
-export function SearchParamsTable({ data, pageCount }: SearchParamsTableProps) {
+export function ServerControlledTable({
+  data,
+  pageCount,
+}: ServerControlledTableProps) {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()

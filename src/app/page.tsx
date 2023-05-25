@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/db"
-import { SearchParamsTable } from "@/components/search-params-table"
+import { ServerControlledTable } from "@/components/server-controlled-table"
 
 export type Sort = "name" | "age" | "email" | "stats" | "stance" | "deckPrice"
 export type Order = "asc" | "desc"
@@ -43,7 +43,7 @@ export default async function IndexPage({ searchParams }: IndexPageProps) {
 
   return (
     <main className="container grid items-center py-5">
-      <SearchParamsTable data={skaters} pageCount={pageCount} />
+      <ServerControlledTable data={skaters} pageCount={pageCount} />
     </main>
   )
 }
