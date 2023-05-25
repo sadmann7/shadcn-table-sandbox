@@ -54,14 +54,14 @@ import { Input } from "./ui/input"
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover"
 import { Skeleton } from "./ui/skeleton"
 
-interface UnstyledTableProps {
+interface SearchParamsTableProps {
   data: Skater[]
   pageCount?: number
 }
 
-export function UnstyledTable({ data, pageCount }: UnstyledTableProps) {
+export function SearchParamsTable({ data, pageCount }: SearchParamsTableProps) {
   const router = useRouter()
-  const path = usePathname()
+  const pathname = usePathname()
   const searchParams = useSearchParams()
 
   // This lets us update states without blocking the UI
@@ -245,7 +245,7 @@ export function UnstyledTable({ data, pageCount }: UnstyledTableProps) {
             setEmailFilter(value.toString())
             startTransition(() => {
               router.push(
-                `${path}?${createQueryString({
+                `${pathname}?${createQueryString({
                   page: page,
                   query: value.toString(),
                 })}`
@@ -336,7 +336,7 @@ export function UnstyledTable({ data, pageCount }: UnstyledTableProps) {
                 isSortable &&
                   startTransition(() => {
                     router.push(
-                      `${path}?${createQueryString({
+                      `${pathname}?${createQueryString({
                         page: page,
                         sort: nextSortDirection ? header.column.id : null,
                         order: nextSortDirection ? nextSortDirection : null,
@@ -386,7 +386,7 @@ export function UnstyledTable({ data, pageCount }: UnstyledTableProps) {
                       onValueChange={(value) => {
                         startTransition(() => {
                           router.push(
-                            `${path}?${createQueryString({
+                            `${pathname}?${createQueryString({
                               page: page,
                               items: value,
                               sort: sort,
@@ -420,7 +420,7 @@ export function UnstyledTable({ data, pageCount }: UnstyledTableProps) {
                       onClick={() => {
                         startTransition(() => {
                           router.push(
-                            `${path}?${createQueryString({
+                            `${pathname}?${createQueryString({
                               page: 1,
                               items: items,
                               sort: sort,
@@ -441,7 +441,7 @@ export function UnstyledTable({ data, pageCount }: UnstyledTableProps) {
                       onClick={() => {
                         startTransition(() => {
                           router.push(
-                            `${path}?${createQueryString({
+                            `${pathname}?${createQueryString({
                               page: Number(page) - 1,
                               items: items,
                               sort: sort,
@@ -462,7 +462,7 @@ export function UnstyledTable({ data, pageCount }: UnstyledTableProps) {
                       onClick={() => {
                         startTransition(() => {
                           router.push(
-                            `${path}?${createQueryString({
+                            `${pathname}?${createQueryString({
                               page: Number(page) + 1,
                               items: items,
                               sort: sort,
@@ -482,7 +482,7 @@ export function UnstyledTable({ data, pageCount }: UnstyledTableProps) {
                       className="h-8 w-8 px-0"
                       onClick={() => {
                         router.push(
-                          `${path}?${createQueryString({
+                          `${pathname}?${createQueryString({
                             page: pageCount ?? 10,
                             items: items,
                             sort: sort,

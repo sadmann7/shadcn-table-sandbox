@@ -1,7 +1,5 @@
-import React from "react"
-
 import { prisma } from "@/lib/db"
-import { UnstyledTable } from "@/components/unstyled-table"
+import { SearchParamsTable } from "@/components/search-params-table"
 
 export type Sort = "name" | "age" | "email" | "stats" | "stance" | "deckPrice"
 export type Order = "asc" | "desc"
@@ -44,8 +42,8 @@ export default async function IndexPage({ searchParams }: IndexPageProps) {
   const pageCount = Math.ceil(totalSkaters / limit)
 
   return (
-    <main className="container grid items-center py-6">
-      <UnstyledTable data={skaters} pageCount={pageCount} />
+    <main className="container grid items-center py-5">
+      <SearchParamsTable data={skaters} pageCount={pageCount} />
     </main>
   )
 }
