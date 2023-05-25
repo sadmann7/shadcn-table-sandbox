@@ -34,8 +34,8 @@ import {
 } from "@/components/ui/table"
 import { deleteSkaters } from "@/app/_actions/skater"
 
+import { DebouncedInput } from "./debounced-input"
 import { Button } from "./ui/button"
-import { Input } from "./ui/input"
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover"
 import { Skeleton } from "./ui/skeleton"
 
@@ -54,8 +54,8 @@ export function ClientControlledTable<TData, TValue>({
   const [rowSelection, setRowSelection] = React.useState({})
   const [selectedRows, setSelectedRows] = React.useState<Row<Skater>[]>([])
 
-  // Handle global filtering
-  const [globalFilter, setGlobalFilter] = React.useState("")
+  // Handle email filtering
+  const [emailFilter, setEmailFilter] = React.useState("")
 
   // Handle column visibility
   const [columnVisibility, setColumnVisibility] =
@@ -64,11 +64,11 @@ export function ClientControlledTable<TData, TValue>({
   return (
     <React.Fragment>
       <div className="flex items-center justify-between gap-5 py-4">
-        <Input
+        <DebouncedInput
           className="max-w-xs"
-          placeholder="Search..."
-          value={globalFilter}
-          onChange={(e) => setGlobalFilter(e.target.value)}
+          placeholder="Search emails..."
+          value={emailFilter}
+          onChange={(value) => setEmailFilter(value.toString())}
         />
         <div className="flex items-center space-x-2">
           <Button
@@ -128,9 +128,11 @@ export function ClientControlledTable<TData, TValue>({
         // The inline `[]` prevents re-rendering the table when the data changes.
         data={data ?? []}
         // States controlled by the table
-        state={{ globalFilter, columnVisibility }}
-        // Handle global filtering
-        setGlobalFilter={setGlobalFilter}
+        state={{
+          columnVisibility,
+          // Default sorting state
+          sorting: [{ id: "email", desc: false }],
+        }}
         // Handle column visibility
         setColumnVisibility={setColumnVisibility}
         renders={{
