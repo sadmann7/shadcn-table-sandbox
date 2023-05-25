@@ -20,7 +20,7 @@ import {
   type VisibilityState,
 } from "unstyled-table"
 
-import { formatPrice } from "@/lib/utils"
+import { formatDate, formatPrice } from "@/lib/utils"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -70,7 +70,7 @@ export function UnstyledTable({ data, pageCount }: UnstyledTableProps) {
 
   const page = searchParams.get("page") ?? "1"
   const items = searchParams.get("items") ?? "10"
-  const sort = (searchParams.get("sort") ?? "name") as Sort
+  const sort = (searchParams.get("sort") ?? "email") as Sort
   const order = searchParams.get("order") as Order | null
   const query = searchParams.get("query")
 
@@ -163,6 +163,15 @@ export function UnstyledTable({ data, pageCount }: UnstyledTableProps) {
         cell: ({ row }) => formatPrice(row.getValue("deckPrice")),
       },
       {
+        accessorKey: "createdAt",
+        header: "Created at",
+        // Cell value formatting
+        cell: ({ row }) => formatDate(row.getValue("createdAt")),
+        // Date column can not be filtered because dates are not unique
+        enableColumnFilter: false,
+        enableGlobalFilter: false,
+      },
+      {
         // Column for row actions
         id: "actions",
         cell: ({ row }) => {
@@ -219,8 +228,6 @@ export function UnstyledTable({ data, pageCount }: UnstyledTableProps) {
     },
   ])
 
-  console.log(selectedRows)
-
   return (
     <React.Fragment>
       <div className="flex items-center justify-between gap-5 py-4">
@@ -259,7 +266,7 @@ export function UnstyledTable({ data, pageCount }: UnstyledTableProps) {
             }}
             disabled={isPending || !selectedRows.length}
           >
-            Delete rows
+            Delete
           </Button>
           <Popover>
             <PopoverTrigger asChild>

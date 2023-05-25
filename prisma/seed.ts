@@ -4,7 +4,9 @@ import { PrismaClient, type Skater } from "@prisma/client"
 const prisma = new PrismaClient()
 
 async function main() {
-  for (let i = 0; i < 100; i++) {
+  await prisma.skater.deleteMany()
+
+  for (let i = 0; i < 240; i++) {
     await prisma.skater.create({
       data: {
         name: faker.person.firstName(),
