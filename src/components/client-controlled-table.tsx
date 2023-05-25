@@ -2,7 +2,13 @@
 
 import * as React from "react"
 import { type Skater } from "@prisma/client"
-import { ChevronDown } from "lucide-react"
+import {
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+} from "lucide-react"
 import { toast } from "react-hot-toast"
 import {
   Table as ShadcnTable,
@@ -11,6 +17,13 @@ import {
   type VisibilityState,
 } from "unstyled-table"
 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import {
   Table,
   TableBody,
@@ -124,13 +137,8 @@ export function ClientControlledTable<TData, TValue>({
           table: ({ children }) => <Table>{children}</Table>,
           header: ({ children }) => <TableHeader>{children}</TableHeader>,
           headerRow: ({ children }) => <TableRow>{children}</TableRow>,
-          headerCell: ({ children, header }) => (
-            <TableHead
-              className="whitespace-nowrap"
-              // Handle server-side sorting
-            >
-              {children}
-            </TableHead>
+          headerCell: ({ children }) => (
+            <TableHead className="whitespace-nowrap">{children}</TableHead>
           ),
           body: ({ children }) => (
             <TableBody>
@@ -154,10 +162,92 @@ export function ClientControlledTable<TData, TValue>({
               {isPending ? <Skeleton className="h-6 w-20" /> : children}
             </TableCell>
           ),
-          filterInput: ({}) => null,
+          filterInput: () => null,
           // Custom pagination bar
-          paginationBar: () => {
-            return null
+          paginationBar: ({ tableInstance }) => {
+            return (
+              <div className="flex flex-col-reverse items-center gap-4 py-4 md:flex-row">
+                <div className="flex-1 text-sm font-medium">
+                  {selectedRows.length} of {data.length} row(s) selected.
+                </div>
+                <div className="flex flex-col items-center gap-3 sm:flex-row sm:gap-6">
+                  <div className="flex flex-wrap items-center space-x-2">
+                    <span className="text-sm font-medium">Rows per page</span>
+                    <Select
+                      value={tableInstance
+                        .getState()
+                        .pagination.pageSize.toString()}
+                      onValueChange={(value) => {
+                        tableInstance.setPageSize(Number(value))
+                      }}
+                      disabled={isPending}
+                    >
+                      <SelectTrigger className="h-8 w-16">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {[10, 20, 30, 40, 50].map((item) => (
+                          <SelectItem key={item} value={item.toString()}>
+                            {item}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="text-sm font-medium">
+                    {`Page ${
+                      tableInstance.getState().pagination.pageIndex + 1
+                    } of ${tableInstance.getPageCount() ?? 10}`}
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8 w-8 px-0"
+                      onClick={() => tableInstance.setPageIndex(0)}
+                      disabled={!tableInstance.getCanPreviousPage()}
+                    >
+                      <ChevronsLeft className="h-5 w-5" aria-hidden="true" />
+                      <span className="sr-only">First page</span>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8 w-8 px-0"
+                      onClick={() => tableInstance.previousPage()}
+                      disabled={!tableInstance.getCanPreviousPage()}
+                    >
+                      <ChevronLeft className="h-5 w-5" aria-hidden="true" />
+                      <span className="sr-only">Previous page</span>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8 w-8 px-0"
+                      onClick={() => tableInstance.nextPage()}
+                      disabled={!tableInstance.getCanNextPage()}
+                    >
+                      <ChevronRight className="h-5 w-5" aria-hidden="true" />
+                      <span className="sr-only">Next page</span>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8 w-8 px-0"
+                      onClick={() =>
+                        tableInstance.setPageIndex(
+                          tableInstance.getPageCount() - 1
+                        )
+                      }
+                      disabled={!tableInstance.getCanNextPage()}
+                    >
+                      <ChevronsRight className="h-5 w-5" aria-hidden="true" />
+                      <span className="sr-only">Last page</span>
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )
           },
         }}
       />
