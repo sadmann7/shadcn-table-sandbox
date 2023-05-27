@@ -167,7 +167,7 @@ export function ServerControlledTable({
       },
       {
         accessorKey: "createdAt",
-        header: "Created at",
+        header: "Created At",
         // Cell value formatting
         cell: ({ row }) => formatDate(row.getValue("createdAt")),
         // Date column can not be filtered because dates are not unique
@@ -330,7 +330,7 @@ export function ServerControlledTable({
           headerCell: ({ children, header }) => (
             <TableHead
               className="whitespace-nowrap"
-              // Handle server-side sorting
+              // Handle server-side column sorting
               onClick={() => {
                 const isSortable = header.column.getCanSort()
                 const nextSortDirection = header.column.getNextSortingOrder()

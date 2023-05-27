@@ -48,6 +48,8 @@ export function ClientControlledTable<TData, TValue>({
   data,
   columns,
 }: ClientControlledTableProps<TData, TValue>) {
+  // This lets us update states without blocking the UI
+  // Read more: https://react.dev/reference/react/useTransition#usage
   const [isPending, startTransition] = React.useTransition()
 
   // Handle row selection

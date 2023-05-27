@@ -78,7 +78,7 @@ export const columns: ColumnDef<Skater, unknown>[] = [
   },
   {
     accessorKey: "createdAt",
-    header: "Created at",
+    header: "Created At",
     // Cell value formatting
     cell: ({ row }) => formatDate(row.getValue("createdAt")),
     // Date column can not be filtered because dates are not unique

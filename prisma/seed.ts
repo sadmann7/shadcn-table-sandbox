@@ -17,6 +17,7 @@ async function main() {
           faker.helpers.shuffle<Skater["stance"]>(["mongo", "goofy"])[0] ??
           "goofy",
         deckPrice: faker.number.int({ min: 25, max: 100 }),
+        createdAt: faker.date.past(),
       },
     })
   }
