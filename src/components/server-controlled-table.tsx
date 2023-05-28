@@ -243,10 +243,9 @@ export function ServerControlledTable({
       setGlobalFilter={setGlobalFilter}
       // Handle column visibility
       setColumnVisibility={setColumnVisibility}
-      // Manual controle for pagination, filtering and sorting
+      // These are required for controlled pagination, and filtering
       manualPagination
       manualFiltering
-      manualSorting
       // Table renderers
       renders={{
         table: ({ children, tableInstance }) => (
@@ -257,12 +256,12 @@ export function ServerControlledTable({
                 placeholder="Filter emails.."
                 value={email}
                 onChange={(value) => {
-                  setEmail(value.toString())
+                  setEmail(String(value))
                   startTransition(() => {
                     router.push(
                       `${pathname}?${createQueryString({
-                        page: page,
-                        query: value.toString(),
+                        page: 1,
+                        query: String(value),
                       })}`
                     )
                   })
@@ -286,7 +285,6 @@ export function ServerControlledTable({
                           checked={column.getIsVisible()}
                           onCheckedChange={(value) => {
                             column.toggleVisibility(!!value)
-                            console.log(column.toggleVisibility(!!value))
                           }}
                         >
                           {column.id}
@@ -366,10 +364,10 @@ export function ServerControlledTable({
                       startTransition(() => {
                         router.push(
                           `${pathname}?${createQueryString({
-                            page: page,
+                            page,
                             items: value,
-                            sort: sort,
-                            order: order,
+                            sort,
+                            order,
                           })}`
                         )
                       })
@@ -402,8 +400,8 @@ export function ServerControlledTable({
                           `${pathname}?${createQueryString({
                             page: 1,
                             items: items,
-                            sort: sort,
-                            order: order,
+                            sort,
+                            order,
                           })}`
                         )
                       })
@@ -423,8 +421,8 @@ export function ServerControlledTable({
                           `${pathname}?${createQueryString({
                             page: Number(page) - 1,
                             items: items,
-                            sort: sort,
-                            order: order,
+                            sort,
+                            order,
                           })}`
                         )
                       })
@@ -444,8 +442,8 @@ export function ServerControlledTable({
                           `${pathname}?${createQueryString({
                             page: Number(page) + 1,
                             items: items,
-                            sort: sort,
-                            order: order,
+                            sort,
+                            order,
                           })}`
                         )
                       })
@@ -464,8 +462,8 @@ export function ServerControlledTable({
                         `${pathname}?${createQueryString({
                           page: pageCount ?? 10,
                           items: items,
-                          sort: sort,
-                          order: order,
+                          sort,
+                          order,
                         })}`
                       )
                     }}
