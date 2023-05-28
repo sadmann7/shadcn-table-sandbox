@@ -34,7 +34,7 @@ import {
 } from "@/components/ui/table"
 import { deleteSkaters } from "@/app/_actions/skater"
 
-import { DebouncedInput } from "./debounced-input"
+import { DebounceInput } from "./debounce-input"
 import { Button } from "./ui/button"
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover"
 import { Skeleton } from "./ui/skeleton"
@@ -66,7 +66,7 @@ export function ClientControlledTable<TData, TValue>({
   return (
     <React.Fragment>
       <div className="flex items-center justify-between gap-5 py-4">
-        <DebouncedInput
+        <DebounceInput
           className="max-w-xs"
           placeholder="Search emails..."
           value={emailFilter}
