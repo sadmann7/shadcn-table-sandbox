@@ -222,28 +222,24 @@ export function ServerControlledTable({
       itemsCount={Number(items)}
       // States controlled by the table
       state={{ sorting }}
-      // These are required for controlled pagination, and filtering
       manualPagination
-      manualFiltering
       // Table renderers
       renders={{
         table: ({ children, tableInstance }) => {
-          console.log(tableInstance.getState().globalFilter)
-
           return (
             <div className="w-full p-1">
               <DebounceInput
                 className="max-w-xs"
-                placeholder="Filter..."
-                value={String(tableInstance.getState().globalFilter)}
-                onChange={(value) =>
-                  tableInstance.setGlobalFilter(String(value))
-                }
+                placeholder="Search all columns..."
+                value={tableInstance.getState().globalFilter as string}
+                onChange={(value) => {
+                  tableInstance.setGlobalFilter(value)
+                }}
               />
               <div className="flex items-center gap-2 py-4">
                 <DebounceInput
                   className="max-w-xs"
-                  placeholder="Filter emails..."
+                  placeholder="Search emails..."
                   value={emailFilter}
                   onChange={(value) => {
                     setEmailFilter(String(value))
