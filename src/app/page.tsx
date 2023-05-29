@@ -33,7 +33,7 @@ export default async function IndexPage({ searchParams }: IndexPageProps) {
         email: query ? { contains: query, mode: "insensitive" } : undefined,
       },
       // For server-side sorting
-      orderBy: sort ? { [sort]: order ?? "asc" } : undefined,
+      orderBy: { [sort ?? "email"]: order ?? "asc" },
     }),
     prisma.skater.count(),
   ])

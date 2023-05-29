@@ -13,7 +13,6 @@ export function DebounceInput({
   debounce = 500,
   ...props
 }: DebounceInputProps) {
-  const inputRef = React.useRef<HTMLInputElement>(null)
   const [value, setValue] = React.useState(props.value ?? "")
   const [debouncedValue, setDebouncedValue] = React.useState(value)
 
@@ -25,8 +24,11 @@ export function DebounceInput({
   )
 
   React.useEffect(() => {
+    setValue(props.value ?? "")
+  }, [props.value])
+
+  React.useEffect(() => {
     const timeout = setTimeout(() => {
-      inputRef.current?.focus()
       setDebouncedValue(value)
     }, debounce)
 
@@ -42,7 +44,5 @@ export function DebounceInput({
     }
   }, [debouncedValue, onChange, props.value])
 
-  return (
-    <Input ref={inputRef} {...props} value={value} onChange={handleChange} />
-  )
+  return <Input {...props} autoFocus value={value} onChange={handleChange} />
 }

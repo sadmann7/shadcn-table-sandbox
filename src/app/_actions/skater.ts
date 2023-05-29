@@ -4,7 +4,7 @@ import { revalidateTag } from "next/cache"
 
 import { prisma } from "@/lib/db"
 
-export async function deleteSkaters(ids: string[]) {
+export async function deleteSkatersAction(ids: string[]) {
   if (!isArrayOfStrings(ids)) {
     throw new Error("Skater ids must be an array of strings")
   }

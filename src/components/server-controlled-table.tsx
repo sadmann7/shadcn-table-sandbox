@@ -45,6 +45,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { deleteSkatersAction } from "@/app/_actions/skater"
 import type { Order, Sort } from "@/app/page"
 
 import { DebounceInput } from "./debounce-input"
@@ -93,10 +94,6 @@ export function ServerControlledTable({
     [searchParams]
   )
 
-  // Handle row selection
-  const [rowSelection, setRowSelection] = React.useState({})
-  const [selectedRows, setSelectedRows] = React.useState<Row<Skater>[]>([])
-
   // Memoize the columns so they don't re-render on every render
   const columns = React.useMemo<ColumnDef<Skater, unknown>[]>(
     () => [
@@ -108,8 +105,6 @@ export function ServerControlledTable({
             checked={table.getIsAllPageRowsSelected()}
             onCheckedChange={(value) => {
               table.toggleAllPageRowsSelected(!!value)
-              //* This is a workaround for row selection without using the Row Selection API
-              setSelectedRows(value ? table.getRowModel().rows : [])
             }}
             aria-label="Select all"
           />
@@ -119,10 +114,6 @@ export function ServerControlledTable({
             checked={row.getIsSelected()}
             onCheckedChange={(value) => {
               row.toggleSelected(!!value)
-              //* This is a workaround for row selection without using the Row Selection API
-              setSelectedRows((rows) =>
-                value ? [...rows, row] : rows.filter((r) => r !== row)
-              )
             }}
             aria-label="Select row"
           />
@@ -212,6 +203,9 @@ export function ServerControlledTable({
     []
   )
 
+  // Handle row selection
+  const [rowSelection, setRowSelection] = React.useState({})
+
   // Handle global filtering
   const [globalFilter, setGlobalFilter] = React.useState("")
 
@@ -267,32 +261,52 @@ export function ServerControlledTable({
                   })
                 }}
               />
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="ml-auto">
-                    Columns <ChevronDown className="ml-2 h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  {tableInstance
-                    .getAllColumns()
-                    .filter((column) => column.getCanHide())
-                    .map((column) => {
-                      return (
-                        <DropdownMenuCheckboxItem
-                          key={column.id}
-                          className="capitalize"
-                          checked={column.getIsVisible()}
-                          onCheckedChange={(value) => {
-                            column.toggleVisibility(!!value)
-                          }}
-                        >
-                          {column.id}
-                        </DropdownMenuCheckboxItem>
+              <div className="ml-auto flex items-center space-x-2">
+                <Button
+                  variant="destructive"
+                  onClick={() => {
+                    startTransition(async () => {
+                      // Delete the selected rows
+                      await deleteSkatersAction(
+                        tableInstance
+                          .getSelectedRowModel()
+                          .rows.map((row) => row.original.id)
                       )
-                    })}
-                </DropdownMenuContent>
-              </DropdownMenu>
+                      // Clear row selection
+                      tableInstance.toggleAllPageRowsSelected(false)
+                    })
+                  }}
+                >
+                  Delete
+                </Button>
+
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" className="ml-auto">
+                      Columns <ChevronDown className="ml-2 h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    {tableInstance
+                      .getAllColumns()
+                      .filter((column) => column.getCanHide())
+                      .map((column) => {
+                        return (
+                          <DropdownMenuCheckboxItem
+                            key={column.id}
+                            className="capitalize"
+                            checked={column.getIsVisible()}
+                            onCheckedChange={(value) => {
+                              column.toggleVisibility(!!value)
+                            }}
+                          >
+                            {column.id}
+                          </DropdownMenuCheckboxItem>
+                        )
+                      })}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             </div>
             <div className="rounded-md border">
               <Table>{children}</Table>
@@ -349,11 +363,12 @@ export function ServerControlledTable({
         ),
         filterInput: ({}) => null,
         // Custom pagination bar
-        paginationBar: () => {
+        paginationBar: ({ tableInstance }) => {
           return (
             <div className="flex flex-col-reverse items-center gap-4 py-4 md:flex-row">
               <div className="flex-1 text-sm font-medium">
-                {selectedRows.length} of {items} row(s) selected.
+                {tableInstance.getFilteredSelectedRowModel().rows.length} of{" "}
+                {items} row(s) selected.
               </div>
               <div className="flex flex-col items-center gap-3 sm:flex-row sm:gap-6">
                 <div className="flex flex-wrap items-center space-x-2">

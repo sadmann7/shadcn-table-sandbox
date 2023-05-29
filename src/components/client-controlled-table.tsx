@@ -32,7 +32,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { deleteSkaters } from "@/app/_actions/skater"
+import { deleteSkatersAction } from "@/app/_actions/skater"
 
 import { DebounceInput } from "./debounce-input"
 import { Button } from "./ui/button"
@@ -78,7 +78,9 @@ export function ClientControlledTable<TData, TValue>({
             variant="destructive"
             onClick={() => {
               startTransition(() => {
-                void deleteSkaters(selectedRows.map((row) => row.original.id))
+                void deleteSkatersAction(
+                  selectedRows.map((row) => row.original.id)
+                )
                 setSelectedRows([])
                 toast.success("Skaters deleted")
               })
