@@ -44,5 +44,5 @@ export function DebounceInput({
     }
   }, [debouncedValue, onChange, props.value])
 
-  return <Input {...props} autoFocus value={value} onChange={handleChange} />
+  return <Input {...props} value={value} onChange={handleChange} />
 }

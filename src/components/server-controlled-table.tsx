@@ -16,8 +16,6 @@ import {
   Table as ShadcnTable,
   type ColumnDef,
   type ColumnSort,
-  type Row,
-  type VisibilityState,
 } from "unstyled-table"
 
 import { formatDate, formatPrice } from "@/lib/utils"
@@ -120,6 +118,7 @@ export function ServerControlledTable({
         ),
         // Disable column sorting for this column
         enableSorting: false,
+        // Remove column from column visibility state
         enableHiding: false,
       },
       {
@@ -203,18 +202,8 @@ export function ServerControlledTable({
     []
   )
 
-  // Handle row selection
-  const [rowSelection, setRowSelection] = React.useState({})
-
-  // Handle global filtering
-  const [globalFilter, setGlobalFilter] = React.useState("")
-
-  // Handle column visibility
-  const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>({})
-
   // Handle server-side column (email) filtering
-  const [email, setEmail] = React.useState(query ?? "")
+  const [emailFilter, setEmailFilter] = React.useState(query ?? "")
 
   // Handle server-side column sorting
   const [sorting] = React.useState<ColumnSort[]>([
@@ -232,87 +221,98 @@ export function ServerControlledTable({
       // Rows per page
       itemsCount={Number(items)}
       // States controlled by the table
-      state={{ globalFilter, columnVisibility, sorting }}
-      // Handle global filtering
-      setGlobalFilter={setGlobalFilter}
-      // Handle column visibility
-      setColumnVisibility={setColumnVisibility}
+      state={{ sorting }}
       // These are required for controlled pagination, and filtering
       manualPagination
       manualFiltering
       // Table renderers
       renders={{
-        table: ({ children, tableInstance }) => (
-          <div className="w-full">
-            <div className="flex items-center py-4">
+        table: ({ children, tableInstance }) => {
+          console.log(tableInstance.getState().globalFilter)
+
+          return (
+            <div className="w-full p-1">
               <DebounceInput
-                className="ml-1 max-w-xs"
-                placeholder="Filter emails.."
-                value={email}
-                onChange={(value) => {
-                  setEmail(String(value))
-                  startTransition(() => {
-                    router.push(
-                      `${pathname}?${createQueryString({
-                        page: 1,
-                        query: String(value),
-                      })}`
-                    )
-                  })
-                }}
+                className="max-w-xs"
+                placeholder="Filter..."
+                value={String(tableInstance.getState().globalFilter)}
+                onChange={(value) =>
+                  tableInstance.setGlobalFilter(String(value))
+                }
               />
-              <div className="ml-auto flex items-center space-x-2">
-                <Button
-                  variant="destructive"
-                  onClick={() => {
-                    startTransition(async () => {
-                      // Delete the selected rows
-                      await deleteSkatersAction(
-                        tableInstance
-                          .getSelectedRowModel()
-                          .rows.map((row) => row.original.id)
+              <div className="flex items-center gap-2 py-4">
+                <DebounceInput
+                  className="max-w-xs"
+                  placeholder="Filter emails..."
+                  value={emailFilter}
+                  onChange={(value) => {
+                    setEmailFilter(String(value))
+                    startTransition(() => {
+                      router.push(
+                        `${pathname}?${createQueryString({
+                          page: 1,
+                          query: String(value),
+                        })}`
                       )
-                      // Clear row selection
-                      tableInstance.toggleAllPageRowsSelected(false)
                     })
                   }}
-                >
-                  Delete
-                </Button>
-
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" className="ml-auto">
-                      Columns <ChevronDown className="ml-2 h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    {tableInstance
-                      .getAllColumns()
-                      .filter((column) => column.getCanHide())
-                      .map((column) => {
-                        return (
-                          <DropdownMenuCheckboxItem
-                            key={column.id}
-                            className="capitalize"
-                            checked={column.getIsVisible()}
-                            onCheckedChange={(value) => {
-                              column.toggleVisibility(!!value)
-                            }}
-                          >
-                            {column.id}
-                          </DropdownMenuCheckboxItem>
+                />
+                <div className="ml-auto flex items-center space-x-2">
+                  <Button
+                    variant="destructive"
+                    onClick={() => {
+                      startTransition(async () => {
+                        // Delete the selected rows
+                        await deleteSkatersAction(
+                          tableInstance
+                            .getSelectedRowModel()
+                            .rows.map((row) => row.original.id)
                         )
-                      })}
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                        // Reset row selection
+                        tableInstance.resetRowSelection()
+                      })
+                    }}
+                    disabled={
+                      !tableInstance.getSelectedRowModel().rows.length ||
+                      isPending
+                    }
+                  >
+                    Delete
+                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" className="ml-auto">
+                        Columns <ChevronDown className="ml-2 h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      {tableInstance
+                        .getAllColumns()
+                        .filter((column) => column.getCanHide())
+                        .map((column) => {
+                          return (
+                            <DropdownMenuCheckboxItem
+                              key={column.id}
+                              className="capitalize"
+                              checked={column.getIsVisible()}
+                              onCheckedChange={(value) => {
+                                column.toggleVisibility(!!value)
+                              }}
+                            >
+                              {column.id}
+                            </DropdownMenuCheckboxItem>
+                          )
+                        })}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </div>
+              <div className="rounded-md border">
+                <Table>{children}</Table>
               </div>
             </div>
-            <div className="rounded-md border">
-              <Table>{children}</Table>
-            </div>
-          </div>
-        ),
+          )
+        },
         header: ({ children }) => <TableHeader>{children}</TableHeader>,
         headerRow: ({ children }) => <TableRow>{children}</TableRow>,
         headerCell: ({ children, header }) => (
