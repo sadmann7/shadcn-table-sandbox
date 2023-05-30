@@ -1,26 +1,27 @@
 import { prisma } from "@/lib/db"
 import { ServerControlledTable } from "@/components/server-controlled-table"
 
-export type Sort = "name" | "age" | "email" | "stats" | "stance" | "deckPrice"
-export type Order = "asc" | "desc"
-
 interface IndexPageProps {
   searchParams: {
     page?: string
     items?: string
-    sort?: Sort
-    order?: Order
-    query?: string
+    sort_by?: string
+    order?: "asc" | "desc"
+    email?: string
+    stance?: string
   }
 }
 
 export default async function IndexPage({ searchParams }: IndexPageProps) {
-  const { page, items, sort, order, query } = searchParams
+  const { page, items, sort_by, order, email, stance } = searchParams
 
   // Number of skaters to show per page
   const limit = items ? parseInt(items) : 10
   // Number of skaters to skip
-  const offset = page ? (parseInt(page) - 1) * limit : 1
+  const offset = page ? (parseInt(page) - 1) * limit : 0
+
+  // Check if we need to filter skaters
+  const needFiltering = email || stance
 
   // Get skaters and total skaters count in a single query
   const [skaters, totalSkaters] = await prisma.$transaction([
@@ -29,11 +30,16 @@ export default async function IndexPage({ searchParams }: IndexPageProps) {
       take: limit,
       skip: offset,
       // For server-side filtering
-      where: {
-        email: query ? { contains: query, mode: "insensitive" } : undefined,
-      },
+      where: needFiltering
+        ? {
+            AND: {
+              email: email ? { contains: email } : undefined,
+              stance: stance ? { equals: stance } : undefined,
+            },
+          }
+        : undefined,
       // For server-side sorting
-      orderBy: { [sort ?? "email"]: order ?? "asc" },
+      orderBy: { [sort_by ?? "email"]: order ?? "asc" },
     }),
     prisma.skater.count(),
   ])

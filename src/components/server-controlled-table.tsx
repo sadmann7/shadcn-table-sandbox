@@ -10,6 +10,7 @@ import {
   ChevronsLeft,
   ChevronsRight,
   MoreHorizontal,
+  PlusCircle,
 } from "lucide-react"
 import { toast } from "react-hot-toast"
 import {
@@ -44,7 +45,6 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { deleteSkatersAction } from "@/app/_actions/skater"
-import type { Order, Sort } from "@/app/page"
 
 import { DebounceInput } from "./debounce-input"
 import { Button } from "./ui/button"
@@ -70,9 +70,10 @@ export function ServerControlledTable({
 
   const page = searchParams.get("page") ?? "1"
   const items = searchParams.get("items") ?? "10"
-  const sort = (searchParams.get("sort") ?? "email") as Sort
-  const order = searchParams.get("order") as Order | null
-  const query = searchParams.get("query")
+  const sort_by = searchParams.get("sort_by") ?? "email"
+  const order = searchParams.get("order")
+  const email = searchParams.get("email")
+  const stance = searchParams.get("stance")
 
   // create query string
   const createQueryString = React.useCallback(
@@ -203,12 +204,12 @@ export function ServerControlledTable({
   )
 
   // Handle server-side column (email) filtering
-  const [emailFilter, setEmailFilter] = React.useState(query ?? "")
+  const [emailFilter, setEmailFilter] = React.useState(email ?? "")
 
   // Handle server-side column sorting
   const [sorting] = React.useState<ColumnSort[]>([
     {
-      id: sort,
+      id: sort_by,
       desc: order === "desc" ? true : false,
     },
   ])
@@ -222,6 +223,7 @@ export function ServerControlledTable({
       itemsCount={Number(items)}
       // States controlled by the table
       state={{ sorting }}
+      // Enable controlled states
       manualPagination
       // Table renderers
       renders={{
@@ -237,22 +239,88 @@ export function ServerControlledTable({
                 }}
               />
               <div className="flex items-center gap-2 py-4">
-                <DebounceInput
-                  className="max-w-xs"
-                  placeholder="Search emails..."
-                  value={emailFilter}
-                  onChange={(value) => {
-                    setEmailFilter(String(value))
-                    startTransition(() => {
-                      router.push(
-                        `${pathname}?${createQueryString({
-                          page: 1,
-                          query: String(value),
-                        })}`
-                      )
-                    })
-                  }}
-                />
+                <div className="flex items-center gap-2">
+                  <DebounceInput
+                    className="max-w-xs"
+                    placeholder="Search emails..."
+                    value={emailFilter}
+                    onChange={(value) => {
+                      setEmailFilter(String(value))
+                      startTransition(() => {
+                        router.push(
+                          `${pathname}?${createQueryString({
+                            page: 1,
+                            email: String(value),
+                          })}`
+                        )
+                      })
+                    }}
+                  />
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="ml-auto"
+                        disabled={isPending}
+                      >
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        Stance
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start">
+                      <DropdownMenuCheckboxItem
+                        checked={stance === "mongo"}
+                        onCheckedChange={(value) => {
+                          startTransition(() => {
+                            router.push(
+                              `${pathname}?${createQueryString({
+                                page: 1,
+                                stance: value ? "mongo" : "goofy",
+                              })}`
+                            )
+                          })
+                        }}
+                      >
+                        Mongo
+                      </DropdownMenuCheckboxItem>
+                      <DropdownMenuCheckboxItem
+                        checked={stance === "goofy"}
+                        onCheckedChange={(value) => {
+                          startTransition(() => {
+                            router.push(
+                              `${pathname}?${createQueryString({
+                                page: 1,
+                                stance: value ? "goofy" : "regular",
+                              })}`
+                            )
+                          })
+                        }}
+                      >
+                        Goofy
+                      </DropdownMenuCheckboxItem>
+                      {stance && (
+                        <>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            className="justify-center"
+                            onClick={() => {
+                              startTransition(() => {
+                                router.push(
+                                  `${pathname}?${createQueryString({
+                                    page: 1,
+                                    stance: null,
+                                  })}`
+                                )
+                              })
+                            }}
+                          >
+                            Clear Filter
+                          </DropdownMenuItem>
+                        </>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
                 <div className="ml-auto flex items-center space-x-2">
                   <Button
                     variant="destructive"
@@ -377,7 +445,7 @@ export function ServerControlledTable({
                           `${pathname}?${createQueryString({
                             page,
                             items: value,
-                            sort,
+                            sort_by,
                             order,
                           })}`
                         )
@@ -411,7 +479,7 @@ export function ServerControlledTable({
                           `${pathname}?${createQueryString({
                             page: 1,
                             items: items,
-                            sort,
+                            sort_by,
                             order,
                           })}`
                         )
@@ -432,7 +500,7 @@ export function ServerControlledTable({
                           `${pathname}?${createQueryString({
                             page: Number(page) - 1,
                             items: items,
-                            sort,
+                            sort_by,
                             order,
                           })}`
                         )
@@ -453,7 +521,7 @@ export function ServerControlledTable({
                           `${pathname}?${createQueryString({
                             page: Number(page) + 1,
                             items: items,
-                            sort,
+                            sort_by,
                             order,
                           })}`
                         )
@@ -473,7 +541,7 @@ export function ServerControlledTable({
                         `${pathname}?${createQueryString({
                           page: pageCount ?? 10,
                           items: items,
-                          sort,
+                          sort_by,
                           order,
                         })}`
                       )
