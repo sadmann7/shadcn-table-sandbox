@@ -33,8 +33,12 @@ export default async function IndexPage({ searchParams }: IndexPageProps) {
       where: needFiltering
         ? {
             AND: {
-              email: email ? { contains: email } : undefined,
-              stance: stance ? { equals: stance } : undefined,
+              email: email
+                ? { contains: email, mode: "insensitive" }
+                : undefined,
+              stance: stance
+                ? { equals: stance, mode: "insensitive" }
+                : undefined,
             },
           }
         : undefined,

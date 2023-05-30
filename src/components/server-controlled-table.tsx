@@ -215,348 +215,351 @@ export function ServerControlledTable({
   ])
 
   return (
-    <ShadcnTable
-      columns={columns}
-      // The inline `[]` prevents re-rendering the table when the data changes.
-      data={data ?? []}
-      // Rows per page
-      itemsCount={Number(items)}
-      // States controlled by the table
-      state={{ sorting }}
-      // Enable controlled states
-      manualPagination
-      // Table renderers
-      renders={{
-        table: ({ children, tableInstance }) => {
-          return (
-            <div className="w-full p-1">
-              <DebounceInput
-                className="max-w-xs"
-                placeholder="Search all columns..."
-                value={tableInstance.getState().globalFilter as string}
-                onChange={(value) => {
-                  tableInstance.setGlobalFilter(value)
-                }}
-              />
-              <div className="flex items-center gap-2 py-4">
-                <div className="flex items-center gap-2">
-                  <DebounceInput
-                    className="max-w-xs"
-                    placeholder="Search emails..."
-                    value={emailFilter}
-                    onChange={(value) => {
-                      setEmailFilter(String(value))
-                      startTransition(() => {
-                        router.push(
-                          `${pathname}?${createQueryString({
-                            page: 1,
-                            email: String(value),
-                          })}`
-                        )
-                      })
-                    }}
-                  />
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className="ml-auto"
-                        disabled={isPending}
-                      >
-                        <PlusCircle className="mr-2 h-4 w-4" />
-                        Stance
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start">
-                      <DropdownMenuCheckboxItem
-                        checked={stance === "mongo"}
-                        onCheckedChange={(value) => {
-                          startTransition(() => {
-                            router.push(
-                              `${pathname}?${createQueryString({
-                                page: 1,
-                                stance: value ? "mongo" : "goofy",
-                              })}`
-                            )
-                          })
-                        }}
-                      >
-                        Mongo
-                      </DropdownMenuCheckboxItem>
-                      <DropdownMenuCheckboxItem
-                        checked={stance === "goofy"}
-                        onCheckedChange={(value) => {
-                          startTransition(() => {
-                            router.push(
-                              `${pathname}?${createQueryString({
-                                page: 1,
-                                stance: value ? "goofy" : "regular",
-                              })}`
-                            )
-                          })
-                        }}
-                      >
-                        Goofy
-                      </DropdownMenuCheckboxItem>
-                      {stance && (
-                        <>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            className="justify-center"
-                            onClick={() => {
-                              startTransition(() => {
-                                router.push(
-                                  `${pathname}?${createQueryString({
-                                    page: 1,
-                                    stance: null,
-                                  })}`
-                                )
-                              })
-                            }}
-                          >
-                            Clear Filter
-                          </DropdownMenuItem>
-                        </>
-                      )}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-                <div className="ml-auto flex items-center space-x-2">
-                  <Button
-                    variant="destructive"
-                    onClick={() => {
-                      startTransition(async () => {
-                        // Delete the selected rows
-                        await deleteSkatersAction(
-                          tableInstance
-                            .getSelectedRowModel()
-                            .rows.map((row) => row.original.id)
-                        )
-                        // Reset row selection
-                        tableInstance.resetRowSelection()
-                      })
-                    }}
-                    disabled={
-                      !tableInstance.getSelectedRowModel().rows.length ||
-                      isPending
-                    }
-                  >
-                    Delete
-                  </Button>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="outline" className="ml-auto">
-                        Columns <ChevronDown className="ml-2 h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      {tableInstance
-                        .getAllColumns()
-                        .filter((column) => column.getCanHide())
-                        .map((column) => {
-                          return (
-                            <DropdownMenuCheckboxItem
-                              key={column.id}
-                              className="capitalize"
-                              checked={column.getIsVisible()}
-                              onCheckedChange={(value) => {
-                                column.toggleVisibility(!!value)
+    <div className="w-full">
+      <ShadcnTable
+        columns={columns}
+        // The inline `[]` prevents re-rendering the table when the data changes.
+        data={data ?? []}
+        // Rows per page
+        itemsCount={Number(items)}
+        // States controlled by the table
+        state={{ sorting }}
+        // Enable controlled states
+        manualPagination
+        // Table renderers
+        renders={{
+          table: ({ children, tableInstance }) => {
+            return (
+              <div className="w-full p-1">
+                <DebounceInput
+                  className="max-w-xs"
+                  placeholder="Search all columns..."
+                  value={tableInstance.getState().globalFilter as string}
+                  onChange={(value) => {
+                    tableInstance.setGlobalFilter(value)
+                  }}
+                />
+                <div className="flex items-center gap-2 py-4">
+                  <div className="flex w-full max-w-xs items-center gap-2">
+                    <DebounceInput
+                      className="max-w-xs"
+                      placeholder="Search emails..."
+                      value={emailFilter}
+                      onChange={(value) => {
+                        setEmailFilter(String(value))
+                        startTransition(() => {
+                          router.push(
+                            `${pathname}?${createQueryString({
+                              page: 1,
+                              email: String(value),
+                            })}`
+                          )
+                        })
+                      }}
+                    />
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          aria-label="Open stance filter menu"
+                          variant="outline"
+                          className="ml-auto"
+                          disabled={isPending}
+                        >
+                          <PlusCircle className="h-4 w-4 sm:mr-2" />
+                          <span className="hidden sm:inline-block">Stance</span>
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="start">
+                        <DropdownMenuCheckboxItem
+                          checked={stance === "mongo"}
+                          onCheckedChange={(value) => {
+                            startTransition(() => {
+                              router.push(
+                                `${pathname}?${createQueryString({
+                                  page: 1,
+                                  stance: value ? "mongo" : "goofy",
+                                })}`
+                              )
+                            })
+                          }}
+                        >
+                          Mongo
+                        </DropdownMenuCheckboxItem>
+                        <DropdownMenuCheckboxItem
+                          checked={stance === "goofy"}
+                          onCheckedChange={(value) => {
+                            startTransition(() => {
+                              router.push(
+                                `${pathname}?${createQueryString({
+                                  page: 1,
+                                  stance: value ? "goofy" : "regular",
+                                })}`
+                              )
+                            })
+                          }}
+                        >
+                          Goofy
+                        </DropdownMenuCheckboxItem>
+                        {stance && (
+                          <>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              className="justify-center"
+                              onClick={() => {
+                                startTransition(() => {
+                                  router.push(
+                                    `${pathname}?${createQueryString({
+                                      page: 1,
+                                      stance: null,
+                                    })}`
+                                  )
+                                })
                               }}
                             >
-                              {column.id}
-                            </DropdownMenuCheckboxItem>
+                              Clear Filter
+                            </DropdownMenuItem>
+                          </>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                  <div className="ml-auto flex items-center space-x-2">
+                    <Button
+                      variant="destructive"
+                      onClick={() => {
+                        startTransition(async () => {
+                          // Delete the selected rows
+                          await deleteSkatersAction(
+                            tableInstance
+                              .getSelectedRowModel()
+                              .rows.map((row) => row.original.id)
                           )
-                        })}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              </div>
-              <div className="rounded-md border">
-                <Table>{children}</Table>
-              </div>
-            </div>
-          )
-        },
-        header: ({ children }) => <TableHeader>{children}</TableHeader>,
-        headerRow: ({ children }) => <TableRow>{children}</TableRow>,
-        headerCell: ({ children, header }) => (
-          <TableHead
-            className="whitespace-nowrap"
-            // Handle server-side column sorting
-            onClick={() => {
-              const isSortable = header.column.getCanSort()
-              const nextSortDirection = header.column.getNextSortingOrder()
-
-              // Update the URL with the new sort order if the column is sortable
-              isSortable &&
-                startTransition(() => {
-                  router.push(
-                    `${pathname}?${createQueryString({
-                      page: page,
-                      sort: nextSortDirection ? header.column.id : null,
-                      order: nextSortDirection ? nextSortDirection : null,
-                    })}`
-                  )
-                })
-            }}
-          >
-            {children}
-          </TableHead>
-        ),
-        body: ({ children }) => (
-          <TableBody>
-            {data.length
-              ? children
-              : !isPending && (
-                  <TableRow>
-                    <TableCell
-                      colSpan={columns.length}
-                      className="h-24 text-center"
+                          // Reset row selection
+                          tableInstance.resetRowSelection()
+                        })
+                      }}
+                      disabled={
+                        !tableInstance.getSelectedRowModel().rows.length ||
+                        isPending
+                      }
                     >
-                      No results.
-                    </TableCell>
-                  </TableRow>
-                )}
-          </TableBody>
-        ),
-        bodyRow: ({ children }) => <TableRow>{children}</TableRow>,
-        bodyCell: ({ children }) => (
-          <TableCell>
-            {isPending ? <Skeleton className="h-6 w-20" /> : children}
-          </TableCell>
-        ),
-        filterInput: ({}) => null,
-        // Custom pagination bar
-        paginationBar: ({ tableInstance }) => {
-          return (
-            <div className="flex flex-col-reverse items-center gap-4 py-4 md:flex-row">
-              <div className="flex-1 text-sm font-medium">
-                {tableInstance.getFilteredSelectedRowModel().rows.length} of{" "}
-                {items} row(s) selected.
-              </div>
-              <div className="flex flex-col items-center gap-3 sm:flex-row sm:gap-6">
-                <div className="flex flex-wrap items-center space-x-2">
-                  <span className="text-sm font-medium">Rows per page</span>
-                  <Select
-                    value={items}
-                    onValueChange={(value) => {
-                      startTransition(() => {
-                        router.push(
-                          `${pathname}?${createQueryString({
-                            page,
-                            items: value,
-                            sort_by,
-                            order,
-                          })}`
-                        )
-                      })
-                    }}
-                    disabled={isPending}
-                  >
-                    <SelectTrigger className="h-8 w-16">
-                      <SelectValue placeholder={items} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {[10, 20, 30, 40, 50].map((item) => (
-                        <SelectItem key={item} value={item.toString()}>
-                          {item}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                      Delete
+                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" className="ml-auto">
+                          Columns <ChevronDown className="ml-2 h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        {tableInstance
+                          .getAllColumns()
+                          .filter((column) => column.getCanHide())
+                          .map((column) => {
+                            return (
+                              <DropdownMenuCheckboxItem
+                                key={column.id}
+                                className="capitalize"
+                                checked={column.getIsVisible()}
+                                onCheckedChange={(value) => {
+                                  column.toggleVisibility(!!value)
+                                }}
+                              >
+                                {column.id}
+                              </DropdownMenuCheckboxItem>
+                            )
+                          })}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
                 </div>
-                <div className="text-sm font-medium">
-                  {`Page ${page} of ${pageCount ?? 10}`}
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-8 w-8 px-0"
-                    onClick={() => {
-                      startTransition(() => {
-                        router.push(
-                          `${pathname}?${createQueryString({
-                            page: 1,
-                            items: items,
-                            sort_by,
-                            order,
-                          })}`
-                        )
-                      })
-                    }}
-                    disabled={Number(page) === 1 || isPending}
-                  >
-                    <ChevronsLeft className="h-5 w-5" aria-hidden="true" />
-                    <span className="sr-only">First page</span>
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-8 w-8 px-0"
-                    onClick={() => {
-                      startTransition(() => {
-                        router.push(
-                          `${pathname}?${createQueryString({
-                            page: Number(page) - 1,
-                            items: items,
-                            sort_by,
-                            order,
-                          })}`
-                        )
-                      })
-                    }}
-                    disabled={Number(page) === 1 || isPending}
-                  >
-                    <ChevronLeft className="h-5 w-5" aria-hidden="true" />
-                    <span className="sr-only">Previous page</span>
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-8 w-8 px-0"
-                    onClick={() => {
-                      startTransition(() => {
-                        router.push(
-                          `${pathname}?${createQueryString({
-                            page: Number(page) + 1,
-                            items: items,
-                            sort_by,
-                            order,
-                          })}`
-                        )
-                      })
-                    }}
-                    disabled={Number(page) === (pageCount ?? 10) || isPending}
-                  >
-                    <ChevronRight className="h-5 w-5" aria-hidden="true" />
-                    <span className="sr-only">Next page</span>
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-8 w-8 px-0"
-                    onClick={() => {
-                      router.push(
-                        `${pathname}?${createQueryString({
-                          page: pageCount ?? 10,
-                          items: items,
-                          sort_by,
-                          order,
-                        })}`
-                      )
-                    }}
-                    disabled={Number(page) === (pageCount ?? 10) || isPending}
-                  >
-                    <ChevronsRight className="h-5 w-5" aria-hidden="true" />
-                    <span className="sr-only">Last page</span>
-                  </Button>
+                <div className="rounded-md border">
+                  <Table>{children}</Table>
                 </div>
               </div>
-            </div>
-          )
-        },
-      }}
-    />
+            )
+          },
+          header: ({ children }) => <TableHeader>{children}</TableHeader>,
+          headerRow: ({ children }) => <TableRow>{children}</TableRow>,
+          headerCell: ({ children, header }) => (
+            <TableHead
+              className="whitespace-nowrap"
+              // Handle server-side column sorting
+              onClick={() => {
+                const isSortable = header.column.getCanSort()
+                const nextSortDirection = header.column.getNextSortingOrder()
+
+                // Update the URL with the new sort order if the column is sortable
+                isSortable &&
+                  startTransition(() => {
+                    router.push(
+                      `${pathname}?${createQueryString({
+                        page: page,
+                        sort: nextSortDirection ? header.column.id : null,
+                        order: nextSortDirection ? nextSortDirection : null,
+                      })}`
+                    )
+                  })
+              }}
+            >
+              {children}
+            </TableHead>
+          ),
+          body: ({ children }) => (
+            <TableBody>
+              {data.length
+                ? children
+                : !isPending && (
+                    <TableRow>
+                      <TableCell
+                        colSpan={columns.length}
+                        className="h-24 text-center"
+                      >
+                        No results.
+                      </TableCell>
+                    </TableRow>
+                  )}
+            </TableBody>
+          ),
+          bodyRow: ({ children }) => <TableRow>{children}</TableRow>,
+          bodyCell: ({ children }) => (
+            <TableCell>
+              {isPending ? <Skeleton className="h-6 w-20" /> : children}
+            </TableCell>
+          ),
+          filterInput: ({}) => null,
+          // Custom pagination bar
+          paginationBar: ({ tableInstance }) => {
+            return (
+              <div className="flex flex-col-reverse items-center gap-4 py-4 md:flex-row">
+                <div className="flex-1 text-sm font-medium">
+                  {tableInstance.getFilteredSelectedRowModel().rows.length} of{" "}
+                  {items} row(s) selected.
+                </div>
+                <div className="flex flex-col items-center gap-3 sm:flex-row sm:gap-6">
+                  <div className="flex flex-wrap items-center space-x-2">
+                    <span className="text-sm font-medium">Rows per page</span>
+                    <Select
+                      value={items}
+                      onValueChange={(value) => {
+                        startTransition(() => {
+                          router.push(
+                            `${pathname}?${createQueryString({
+                              page,
+                              items: value,
+                              sort_by,
+                              order,
+                            })}`
+                          )
+                        })
+                      }}
+                      disabled={isPending}
+                    >
+                      <SelectTrigger className="h-8 w-16">
+                        <SelectValue placeholder={items} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {[10, 20, 30, 40, 50].map((item) => (
+                          <SelectItem key={item} value={item.toString()}>
+                            {item}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="text-sm font-medium">
+                    {`Page ${page} of ${pageCount ?? 10}`}
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8 w-8 px-0"
+                      onClick={() => {
+                        startTransition(() => {
+                          router.push(
+                            `${pathname}?${createQueryString({
+                              page: 1,
+                              items: items,
+                              sort_by,
+                              order,
+                            })}`
+                          )
+                        })
+                      }}
+                      disabled={Number(page) === 1 || isPending}
+                    >
+                      <ChevronsLeft className="h-5 w-5" aria-hidden="true" />
+                      <span className="sr-only">First page</span>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8 w-8 px-0"
+                      onClick={() => {
+                        startTransition(() => {
+                          router.push(
+                            `${pathname}?${createQueryString({
+                              page: Number(page) - 1,
+                              items: items,
+                              sort_by,
+                              order,
+                            })}`
+                          )
+                        })
+                      }}
+                      disabled={Number(page) === 1 || isPending}
+                    >
+                      <ChevronLeft className="h-5 w-5" aria-hidden="true" />
+                      <span className="sr-only">Previous page</span>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8 w-8 px-0"
+                      onClick={() => {
+                        startTransition(() => {
+                          router.push(
+                            `${pathname}?${createQueryString({
+                              page: Number(page) + 1,
+                              items: items,
+                              sort_by,
+                              order,
+                            })}`
+                          )
+                        })
+                      }}
+                      disabled={Number(page) === (pageCount ?? 10) || isPending}
+                    >
+                      <ChevronRight className="h-5 w-5" aria-hidden="true" />
+                      <span className="sr-only">Next page</span>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8 w-8 px-0"
+                      onClick={() => {
+                        router.push(
+                          `${pathname}?${createQueryString({
+                            page: pageCount ?? 10,
+                            items: items,
+                            sort_by,
+                            order,
+                          })}`
+                        )
+                      }}
+                      disabled={Number(page) === (pageCount ?? 10) || isPending}
+                    >
+                      <ChevronsRight className="h-5 w-5" aria-hidden="true" />
+                      <span className="sr-only">Last page</span>
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )
+          },
+        }}
+      />
+    </div>
   )
 }
