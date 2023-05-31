@@ -54,7 +54,7 @@ export function ClientControlledTable<TData, TValue>({
   const [isPending, startTransition] = React.useTransition()
 
   return (
-    <div className="w-full">
+    <div className="w-full overflow-auto">
       <ShadcnTable
         columns={columns}
         // The inline `[]` prevents re-rendering the table when the data changes.
