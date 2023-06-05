@@ -4,7 +4,7 @@ import { type Skater } from "@prisma/client"
 import { MoreHorizontal } from "lucide-react"
 import { type ColumnDef } from "unstyled-table"
 
-import { formatDate, formatPrice } from "@/lib/utils"
+import { formatPrice } from "@/lib/utils"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -74,15 +74,6 @@ export const columns: ColumnDef<Skater, unknown>[] = [
     header: () => <span className="text-left">Deck Price</span>,
     // Cell value formatting
     cell: ({ row }) => formatPrice(row.getValue("deckPrice")),
-  },
-  {
-    accessorKey: "createdAt",
-    header: "Created At",
-    // Cell value formatting
-    cell: ({ row }) => formatDate(row.getValue("createdAt")),
-    // Date column can not be filtered because dates are not unique
-    enableColumnFilter: false,
-    enableGlobalFilter: false,
   },
   {
     // Column for row actions

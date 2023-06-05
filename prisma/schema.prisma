@@ -12,12 +12,11 @@ datasource db {
 }
 
 model Skater {
-    id        String   @id @default(uuid())
+    id        String @id @default(uuid())
     name      String
     age       Int
     email     String
     stats     Int
     stance    String
     deckPrice Int
-    createdAt DateTime @default(now())
 }

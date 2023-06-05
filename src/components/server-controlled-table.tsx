@@ -18,7 +18,7 @@ import {
   type ColumnSort,
 } from "unstyled-table"
 
-import { formatDate, formatPrice } from "@/lib/utils"
+import { formatPrice } from "@/lib/utils"
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -69,7 +69,7 @@ export function ServerControlledTable({
 
   const page = searchParams.get("page") ?? "1"
   const items = searchParams.get("items") ?? "10"
-  const sort_by = searchParams.get("sort_by") ?? "email"
+  const sort = searchParams.get("sort") ?? "email"
   const order = searchParams.get("order")
   const email = searchParams.get("email")
   const stance = searchParams.get("stance")
@@ -154,15 +154,6 @@ export function ServerControlledTable({
         cell: ({ row }) => formatPrice(row.getValue("deckPrice")),
       },
       {
-        accessorKey: "createdAt",
-        header: "Created At",
-        // Cell value formatting
-        cell: ({ row }) => formatDate(row.getValue("createdAt")),
-        // Date column can not be filtered because dates are not unique
-        enableColumnFilter: false,
-        enableGlobalFilter: false,
-      },
-      {
         // Column for row actions
         id: "actions",
         enableHiding: false,
@@ -207,7 +198,7 @@ export function ServerControlledTable({
   // Handle server-side column sorting
   const [sorting] = React.useState<ColumnSort[]>([
     {
-      id: sort_by,
+      id: sort,
       desc: order === "desc" ? true : false,
     },
   ])
@@ -445,7 +436,7 @@ export function ServerControlledTable({
                             `${pathname}?${createQueryString({
                               page,
                               items: value,
-                              sort_by,
+                              sort,
                               order,
                             })}`
                           )
@@ -479,7 +470,7 @@ export function ServerControlledTable({
                             `${pathname}?${createQueryString({
                               page: 1,
                               items: items,
-                              sort_by,
+                              sort,
                               order,
                             })}`
                           )
@@ -500,7 +491,7 @@ export function ServerControlledTable({
                             `${pathname}?${createQueryString({
                               page: Number(page) - 1,
                               items: items,
-                              sort_by,
+                              sort,
                               order,
                             })}`
                           )
@@ -521,7 +512,7 @@ export function ServerControlledTable({
                             `${pathname}?${createQueryString({
                               page: Number(page) + 1,
                               items: items,
-                              sort_by,
+                              sort,
                               order,
                             })}`
                           )
@@ -541,7 +532,7 @@ export function ServerControlledTable({
                           `${pathname}?${createQueryString({
                             page: pageCount ?? 10,
                             items: items,
-                            sort_by,
+                            sort,
                             order,
                           })}`
                         )

@@ -16,10 +16,3 @@ export function formatPrice(
     currency,
   }).format(price)
 }
-
-// For formatting the date column
-export function formatDate(date: Date) {
-  return new Intl.DateTimeFormat("en-US", {
-    dateStyle: "medium",
-  }).format(date)
-}

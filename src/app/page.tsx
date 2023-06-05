@@ -5,7 +5,7 @@ interface IndexPageProps {
   searchParams: {
     page?: string
     items?: string
-    sort_by?: string
+    sort?: string
     order?: "asc" | "desc"
     email?: string
     stance?: string
@@ -13,7 +13,7 @@ interface IndexPageProps {
 }
 
 export default async function IndexPage({ searchParams }: IndexPageProps) {
-  const { page, items, sort_by, order, email, stance } = searchParams
+  const { page, items, sort, order, email, stance } = searchParams
 
   // Number of skaters to show per page
   const limit = items ? parseInt(items) : 10
@@ -33,17 +33,13 @@ export default async function IndexPage({ searchParams }: IndexPageProps) {
       where: needFiltering
         ? {
             AND: {
-              email: email
-                ? { contains: email, mode: "insensitive" }
-                : undefined,
-              stance: stance
-                ? { equals: stance, mode: "insensitive" }
-                : undefined,
+              email: email ? { contains: email } : undefined,
+              stance: stance ? { equals: stance } : undefined,
             },
           }
         : undefined,
       // For server-side sorting
-      orderBy: { [sort_by ?? "email"]: order ?? "asc" },
+      orderBy: { [sort ?? "email"]: order ?? "asc" },
     }),
     prisma.skater.count(),
   ])
