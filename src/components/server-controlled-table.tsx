@@ -12,7 +12,6 @@ import {
   MoreHorizontal,
   PlusCircle,
 } from "lucide-react"
-import { toast } from "react-hot-toast"
 import {
   Table as ShadcnTable,
   type ColumnDef,
@@ -186,7 +185,6 @@ export function ServerControlledTable({
                 <DropdownMenuItem
                   onClick={() => {
                     void navigator.clipboard.writeText(skater.id)
-                    toast.success("Skater ID copied to clipboard")
                   }}
                 >
                   Copy skater ID

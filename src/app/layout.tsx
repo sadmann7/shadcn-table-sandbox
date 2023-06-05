@@ -1,9 +1,9 @@
 import "@/styles/globals.css"
+
 import type { Metadata } from "next"
 
 import { fontMono, fontSans } from "@/lib/fonts"
 import { cn } from "@/lib/utils"
-import { Toaster } from "@/components/ui/toaster"
 import { SiteHeader } from "@/components/site-header"
 import { ThemeProvider } from "@/components/theme-provider"
 
@@ -34,7 +34,6 @@ export default function RootLayout({ children }: RootLayoutProps) {
               <div className="flex-1">{children}</div>
             </div>
           </ThemeProvider>
-          <Toaster />
         </body>
       </html>
     </>

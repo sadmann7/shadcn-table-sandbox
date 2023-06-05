@@ -2,7 +2,6 @@
 
 import { type Skater } from "@prisma/client"
 import { MoreHorizontal } from "lucide-react"
-import { toast } from "react-hot-toast"
 import { type ColumnDef } from "unstyled-table"
 
 import { formatDate, formatPrice } from "@/lib/utils"
@@ -107,7 +106,6 @@ export const columns: ColumnDef<Skater, unknown>[] = [
             <DropdownMenuItem
               onClick={() => {
                 void navigator.clipboard.writeText(skater.id)
-                toast.success("Skater ID copied to clipboard")
               }}
             >
               Copy skater ID
